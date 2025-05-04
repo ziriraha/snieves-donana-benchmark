@@ -1,0 +1,6 @@
+pillow
+pandas
+numpy
+megadetector
+ipykernel
+minio
