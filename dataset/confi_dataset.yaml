@@ -1,0 +1,14 @@
+# Images and labels direcotry should be relative to train.py
+TRAIN_DIR_IMAGES: /home/usuario/Documentos/ziri/dataset/train/images
+TRAIN_DIR_LABELS: /home/usuario/Documentos/ziri/dataset/train/xml_labels
+VALID_DIR_IMAGES: /home/usuario/Documentos/ziri/dataset/val/images
+VALID_DIR_LABELS: /home/usuario/Documentos/ziri/dataset/val/xml_labels
+
+# Class names.
+CLASSES: ['_background_', 'mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
+
+# Number of classes (object classes + 1 for background class in Faster RCNN).
+NC: 25
+
+# Whether to save the predictions of the validation set while training.
+SAVE_VALID_PREDICTION_IMAGES: False

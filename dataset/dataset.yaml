@@ -1,0 +1,7 @@
+train: /home/usuario/Documentos/ziri/dataset/train
+val: /home/usuario/Documentos/ziri/dataset/train
+test: /home/usuario/Documentos/ziri/dataset/test
+
+nc: 24 # number of classes
+
+names: ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca'] # class names
