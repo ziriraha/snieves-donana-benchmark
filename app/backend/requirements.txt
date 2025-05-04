@@ -1,0 +1,6 @@
+pandas
+megadetector==5.0.7
+Flask
+minio
+yolov5
+python-dotenv

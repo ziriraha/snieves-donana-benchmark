@@ -37,6 +37,7 @@ Temporary Items
 *.vsix
 
 .venv/
+.env
 
 # Large Files
 ## Model weights
@@ -44,4 +45,4 @@ Temporary Items
 *.pt
 
 ## Dataset
-full.csv
+*.csv
