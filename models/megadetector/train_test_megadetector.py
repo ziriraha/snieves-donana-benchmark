@@ -10,6 +10,7 @@ WEIGHTS_PATH = "yolov5/runs/train/exp/weights/best.pt"
 SAVE_PATH = "./megadetector_trained.pt"
 RUN_PATH = "yolov5/runs/detect/exp/labels"
 
+print("Preparing environment...")
 os.system("rm -rf train_test_megadetector")
 os.mkdir("train_test_megadetector")
 os.chdir("train_test_megadetector")

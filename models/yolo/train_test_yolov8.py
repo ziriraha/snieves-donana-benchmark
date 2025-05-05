@@ -2,9 +2,13 @@ from ultralytics import YOLO
 from utils import Tester
 import os
 
+os.system("rm -rf train_test_yolo")
+os.mkdir("train_test_yolo")
+os.chdir("train_test_yolo")
+
 DATASET = '/home/usuario/Documentos/ziri/dataset/dataset.yaml'
 TEST = '/home/usuario/Documentos/ziri/dataset/test'
-SAVE_LOCATION = '/home/usuario/Documentos/ziri/models/yolo_trained.pt'
+SAVE_LOCATION = './yolo_trained.pt'
 
 # Training
 model = YOLO('yolov8s')

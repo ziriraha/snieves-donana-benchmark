@@ -1,53 +1,66 @@
 import os
-from utils import calculate_iou, calculate_metrics, save_metrics_to_txt
+import shutil
+from utils import Tester
+import pandas as pd
+from PIL import Image
 
+DATASET_YAML = "/home/usuario/Documentos/ziri/dataset/confi_dataset.yaml"
+TEST_PATH = "/home/usuario/Documentos/ziri/dataset/test"
+IMAGES_PATH = os.path.join(TEST_PATH, 'images')
+
+WEIGHTS_PATH = "fastercnn/outputs/training/res_1/best_model.pth"
+SAVE_PATH = "./fasterrcnn_trained.pt"
+RUN_PATH = "fastercnn/outputs/inference/res_1/boxes.csv"
+
+CLASSES = ['_background_', 'mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
+
+print("Preparing environment...")
 os.system("rm -rf train_test_fasterrcnn")
 os.mkdir("train_test_fasterrcnn")
 os.chdir("train_test_fasterrcnn")
 
-os.system("git clone https://github.com/sovit-123/fastercnn-pytorch-training-pipeline.git")
+os.system("git clone https://github.com/sovit-123/fastercnn-pytorch-training-pipeline.git fasterrcnn")
+os.system("pip install -r fasterrcnn/requirements.txt")
 
-os.chdir("fastercnn-pytorch-training-pipeline")
+print("Training FasterRCNN model...")
+os.system(f"python fasterrcnn/train.py --data {DATASET_YAML} --model fasterrcnn_resnet50_fpn_v2 --epochs 20 --batch 4")
+print("Training finished")
 
-os.system("pip install -r requirements.txt")
+print("Saving model...")
+shutil.copy(WEIGHTS_PATH, SAVE_PATH)
 
-os.system("python train.py --data /home/usuario/Documentos/ziri/dataset/confi_dataset.yaml --model fasterrcnn_resnet50_fpn_v2 --epochs 20 --batch 4")
+print("Initializing Tester...")
+tester = Tester("fasterrcnn", TEST_PATH)
 
-os.system("python inference.py --input /home/usuario/Documentos/ziri/dataset/test/images/ --weights /home/usuario/Documentos/ziri/train_test_fasterrcnn/fastercnn-pytorch-training-pipeline/outputs/training/res_1/best_model.pth --table --data /home/usuario/Documentos/ziri/dataset/confi_dataset.yaml")
+print("Running inference on test images")
+os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {DATASET_YAML}")
 
-CLASSES = ['_background_', 'mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
-
-true = []
-pred = []
-iou = []
-
-import PIL.Image as Image
-
-with open("/home/usuario/Documentos/ziri/train_test_fasterrcnn/fastercnn-pytorch-training-pipeline/outputs/inference/res_7/boxes.csv", "r") as file:
-    lines = file.readlines()[1:]
-for line in lines:
-    try:
-        image, pred_label, pred_xmin, pred_xmax, pred_ymin, pred_ymax, pred_width, pred_height, pred_area = line.split(" ")
-        if (pred_label not in CLASSES):
-            continue
-        with Image.open("/home/usuario/Documentos/ziri/dataset/test/images/" + image + ".jpg") as img:
+print("Processing results...")
+results = {}
+with open("/home/usuario/Documentos/ziri/train_test_fasterrcnn/fastercnn-pytorch-training-pipeline/outputs/inference/res_1/boxes.csv", "r") as file:
+    for line in file.readlines()[1:]:
+        img_name, pred_label, pred_xmin, pred_xmax, pred_ymin, pred_ymax, pred_width, pred_height, _ = line.split()
+        with Image.open(os.path.join(IMAGES_PATH, f'{img_name}.jpg')) as img:
             size_x, size_y = img.size
-        with open("/home/usuario/Documentos/ziri/dataset/test/labels/" + image + ".txt", "r") as label_file:
-            true_label, true_x, true_y, true_width, true_height = label_file.readline().split(" ")
-        pred_x = (float(pred_xmin) / size_x + float(pred_xmax) / size_x) / 2
-        pred_y = (float(pred_ymin) / size_y + float(pred_ymax) / size_y) / 2
-        pred_w = float(pred_width) / size_x
-        pred_h = float(pred_height) / size_y
+        px = (float(pred_xmin) / size_x + float(pred_xmax) / size_x) / 2
+        py = (float(pred_ymin) / size_y + float(pred_ymax) / size_y) / 2
+        pw = float(pred_width) / size_x
+        ph = float(pred_height) / size_y
+        results[img_name] = (CLASSES.index(pred_label)-1, [px, py, pw, ph])
 
-        iou.append(calculate_iou([float(true_x), float(true_y), float(true_width), float(true_height)], [pred_x, pred_y, pred_w, pred_h]))
-        
-        true.append(int(true_label))
-        pred.append(CLASSES.index(pred_label)-1)
-    except Exception as e:
-        print(e)
-        continue
 
-metrics = calculate_metrics(true, pred, iou)
-print(metrics)
+def get_pred(img_name):
+    pcls, pbbox = -1, None
+    if img_name in results:
+        pcls, pbbox = results[img_name]
+    return pcls, pbbox
 
-save_metrics_to_txt(metrics, "test_results_fasterrcnn")
+print("Running tester (validation of the results)")
+tester.run(get_pred)
+
+print("Tester finished\nSaving results...")
+tester.calculate_metrics()
+tester.save_metrics_to_txt()
+tester.save_vals_to_txt()
+
+print("Done.")
