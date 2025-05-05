@@ -1,36 +1,78 @@
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 import numpy as np
+import os
 
-def calculate_iou(box1, box2):
-    x1 = max(box1[0], box2[0])
-    y1 = max(box1[1], box2[1])
-    x2 = min(box1[2], box2[2])
-    y2 = min(box1[3], box2[3])
+class Tester:
+    def __init__(self, name, test_path):
+        self.model_name = name
+        self.images_folder = os.path.join(test_path, 'images')
+        self.labels_folder = os.path.join(test_path, 'labels')
+        self.reset_vals()
+
+    def reset_vals(self):
+        self.true = []
+        self.pred = []
+        self.iou = []
+
+    def get_real(self, img_name):
+        lbl_path = os.path.join(self.labels_folder, img_name + '.txt')
+        if not os.path.exists(lbl_path): # Empty image
+            real_cls = -1 # -1 will represent an empty image
+            real_box = None
+        else: # Non-empty
+            with open(lbl_path, 'r') as f:
+                clas, bbox = f.readline().split(" ")
+                real_cls = int(clas)
+                real_box = list(map(float, bbox))
+        return real_cls, real_box
+
+    def run(self, get_pred):
+        for img in os.listdir(self.images):
+            if not img.endswith('.txt'): continue
+            img_name = img.split('.')[0]
+            rcls, rbbox = self.get_real(img_name)
+            pcls, pbbox = get_pred(img_name)
+            
+            self.true.append(rcls)
+            self.pred.append(pcls)
+            # No IOU if empty image
+            if rbbox != None: self.iou.append(self.calculate_iou(pbbox, rbbox))
+
+    def calculate_metrics(self):
+        self.metrics = {
+            "precision": precision_score(self.true, self.pred, average='weighted'),
+            "recall": recall_score(self.true, self.pred, average='weighted'),
+            "f1": f1_score(self.true, self.pred, average='weighted'),
+            "iou_avg": sum(self.iou) / len(self.iou),
+            "conf_matrix": confusion_matrix(self.true, self.pred)
+        }
+        return self.metrics
+
+    def save_metrics_to_txt(self, filename = None):
+        if not filename: filename = f"{self.model_name}_metrics"
+        with open(f"{filename}.txt", "w") as file:
+            file.write("Precision: " + str(self.metrics['precision']) + "\n")
+            file.write("Recall: " + str(self.metrics['recall']) + "\n")
+            file.write("F1-score: " + str(self.metrics['f1']) + "\n")
+            file.write("IoU: " + str(self.metrics['iou_avg']) + "\n")
+            file.write("Confusion Matrix:\n")
+            np.savetxt(file, self.metrics['conf_matrix'], fmt='%d')
+            file.write("\n\n")
     
-    intersection_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
-    
-    box1_area = (box1[2] - box1[0] + 1) * (box1[3] - box1[1] + 1)
-    box2_area = (box2[2] - box2[0] + 1) * (box2[3] - box2[1] + 1)
-    
-    iou = intersection_area / float(box1_area + box2_area - intersection_area)
-    return iou
+    def save_vals_to_txt(self, filename = None):
+        if not filename: filename = f"{self.model_name}_values"
+        with open(f"{filename}.txt", "w") as file:
+            file.write("True vals: " + str(self.true) + " \n")
+            file.write("Pred vals: " + str(self.pred) + " \n")
+            file.write("IoU vals: " + str(self.iou) + " \n")
 
-def calculate_metrics(true, pred, iou):
-    return {
-        "precision": precision_score(true, pred, average='weighted'),
-        "recall": recall_score(true, pred, average='weighted'),
-        "f1": f1_score(true, pred, average='weighted'),
-        "iou_avg": sum(iou) / len(iou),
-        "conf_matrix": confusion_matrix(true, pred)
-    }
-
-def save_metrix_to_txt(metrics, filename):
-    with open(f"{filename}.txt", "w") as file:
-        file.write("Precision: " + str(metrics['precision']) + "\n")
-        file.write("Recall: " + str(metrics['recall']) + "\n")
-        file.write("F1-score: " + str(metrics['f1']) + "\n")
-        file.write("IoU: " + str(metrics['iou_avg']) + "\n")
-        file.write("Confusion Matrix:\n")
-        np.savetxt(file, metrics['conf_matrix'], fmt='%d')
-        file.write("\n\n")
-
+    def calculate_iou(cls, box1, box2):
+        x1 = max(box1[0], box2[0]); x2 = min(box1[2], box2[2])
+        y1 = max(box1[1], box2[1]); y2 = min(box1[3], box2[3])
+        
+        intersection_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+        
+        box1_area = (box1[2] - box1[0] + 1) * (box1[3] - box1[1] + 1)
+        box2_area = (box2[2] - box2[0] + 1) * (box2[3] - box2[1] + 1)
+        
+        return intersection_area / (box1_area + box2_area - intersection_area)
