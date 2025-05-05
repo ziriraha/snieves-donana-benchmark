@@ -7,6 +7,11 @@ CONFI_DATASET_YAML = '/home/usuario/Documentos/ziri/dataset/confi_dataset.yaml'
 TEST_PATH = '/home/usuario/Documentos/ziri/dataset/test'
 IMAGES_PATH = os.path.join(TEST_PATH, 'images')
 
+def prepare_environment(model_name, delete=True):
+    env_name = f"train_test_{model_name}"
+    if delete: os.system(f"rm -rf {env_name}")
+    os.makedirs(env_name, exist_ok=True)
+    os.chdir(env_name)
 
 class Tester:
     def __init__(self, name):

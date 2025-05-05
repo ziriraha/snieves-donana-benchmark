@@ -1,18 +1,16 @@
 import os
 import shutil
-from utils import Tester, CONFI_DATASET_YAML, IMAGES_PATH
+from utils import Tester, prepare_environment, CONFI_DATASET_YAML, IMAGES_PATH
 from PIL import Image
 
+MODEL = 'fasterrcnn'
 WEIGHTS_PATH = "fastercnn/outputs/training/res_1/best_model.pth"
 SAVE_PATH = "./fasterrcnn_trained.pt"
 RUN_PATH = "fastercnn/outputs/inference/res_1/boxes.csv"
 
 CLASSES = ['_background_', 'mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
 
-print("Preparing environment...")
-os.system("rm -rf train_test_fasterrcnn")
-os.mkdir("train_test_fasterrcnn")
-os.chdir("train_test_fasterrcnn")
+prepare_environment(MODEL)
 
 os.system("git clone https://github.com/sovit-123/fastercnn-pytorch-training-pipeline.git fasterrcnn")
 os.system("pip install -r fasterrcnn/requirements.txt")
@@ -25,7 +23,7 @@ print("Saving model...")
 shutil.copy(WEIGHTS_PATH, SAVE_PATH)
 
 print("Initializing Tester...")
-tester = Tester("fasterrcnn")
+tester = Tester(MODEL)
 
 print("Running inference on test images")
 os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {CONFI_DATASET_YAML}")
@@ -34,7 +32,7 @@ print("Processing results...")
 results = {}
 with open("/home/usuario/Documentos/ziri/train_test_fasterrcnn/fastercnn-pytorch-training-pipeline/outputs/inference/res_1/boxes.csv", "r") as file:
     for line in file.readlines()[1:]:
-        img_name, pred_label, pred_xmin, pred_xmax, pred_ymin, pred_ymax, pred_width, pred_height, _ = line.split()
+        img_name, pred_label, pred_xmin, pred_xmax, pred_ymin, pred_ymax, pred_width, pred_height, _ = line.split(',')
         with Image.open(os.path.join(IMAGES_PATH, f'{img_name}.jpg')) as img:
             size_x, size_y = img.size
         px = (float(pred_xmin) / size_x + float(pred_xmax) / size_x) / 2

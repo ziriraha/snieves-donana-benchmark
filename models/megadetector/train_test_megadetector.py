@@ -1,15 +1,13 @@
-from utils import Tester, DATASET_YAML, IMAGES_PATH
+from utils import Tester, prepare_environment, DATASET_YAML, IMAGES_PATH
 import shutil
 import os
 
+MODEL = 'megadetector'
 WEIGHTS_PATH = "yolov5/runs/train/exp/weights/best.pt"
 SAVE_PATH = "./megadetector_trained.pt"
 RUN_PATH = "yolov5/runs/detect/exp/labels"
 
-print("Preparing environment...")
-os.system("rm -rf train_test_megadetector")
-os.mkdir("train_test_megadetector")
-os.chdir("train_test_megadetector")
+prepare_environment(MODEL)
 
 print("Downloading MegaDetector model...")
 os.system("wget https://github.com/agentmorris/MegaDetector/releases/download/v5.0/md_v5a.0.0.pt")
@@ -26,7 +24,7 @@ print("Saving model...")
 shutil.copy(WEIGHTS_PATH, SAVE_PATH)
 
 print("Initializing Tester...")
-tester = Tester('megadetector')
+tester = Tester(MODEL)
 
 print("Running inference on test images")
 os.system(f"python3 detect.py --weights {WEIGHTS_PATH} --source {IMAGES_PATH} --max-det 1 --device 0 --save-txt --nosave")

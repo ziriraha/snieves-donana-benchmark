@@ -1,12 +1,11 @@
 from ultralytics import YOLO
-from utils import Tester, DATASET_YAML
+from utils import Tester, prepare_environment, DATASET_YAML
 import os
 
-os.system("rm -rf train_test_yolo")
-os.mkdir("train_test_yolo")
-os.chdir("train_test_yolo")
-
+MODEL = 'yolo'
 SAVE_LOCATION = './yolo_trained.pt'
+
+prepare_environment(MODEL)
 
 # Training
 model = YOLO('yolov8s')
@@ -17,7 +16,7 @@ model.save(SAVE_LOCATION)
 
 # Testing
 print("Initializing Tester...")
-tester = Tester('yolo')
+tester = Tester(MODEL)
 
 print("Importing model...")
 model = YOLO(SAVE_LOCATION)
