@@ -5,6 +5,7 @@ import os
 class Tester:
     def __init__(self, name, test_path):
         self.model_name = name
+        if not os.path.exists(test_path): raise Exception("Test directory doesn't exist")
         self.images_folder = os.path.join(test_path, 'images')
         self.labels_folder = os.path.join(test_path, 'labels')
         self.reset_vals()
@@ -21,14 +22,15 @@ class Tester:
             real_box = None
         else: # Non-empty
             with open(lbl_path, 'r') as f:
-                clas, bbox = f.readline().split(" ")
+                clas, *bbox = f.readline().split()
                 real_cls = int(clas)
                 real_box = list(map(float, bbox))
         return real_cls, real_box
 
     def run(self, get_pred):
-        for img in os.listdir(self.images):
-            if not img.endswith('.txt'): continue
+        images = os.listdir(self.images_folder)
+        for img in images:
+            if not img.endswith('.jpg'): continue
             img_name = img.split('.')[0]
             rcls, rbbox = self.get_real(img_name)
             pcls, pbbox = get_pred(img_name)
@@ -36,14 +38,14 @@ class Tester:
             self.true.append(rcls)
             self.pred.append(pcls)
             # No IOU if empty image
-            if rbbox != None: self.iou.append(self.calculate_iou(pbbox, rbbox))
+            if rbbox and pbbox: self.iou.append(self.calculate_iou(pbbox, rbbox))
 
     def calculate_metrics(self):
         self.metrics = {
             "precision": precision_score(self.true, self.pred, average='weighted'),
             "recall": recall_score(self.true, self.pred, average='weighted'),
             "f1": f1_score(self.true, self.pred, average='weighted'),
-            "iou_avg": sum(self.iou) / len(self.iou),
+            "iou_avg": sum(self.iou) / len(self.iou) if self.iou else 0,
             "conf_matrix": confusion_matrix(self.true, self.pred)
         }
         return self.metrics
