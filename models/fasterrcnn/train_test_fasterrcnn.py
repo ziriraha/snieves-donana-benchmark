@@ -1,7 +1,6 @@
 import os
 import shutil
 from utils import Tester
-import pandas as pd
 from PIL import Image
 
 DATASET_YAML = "/home/usuario/Documentos/ziri/dataset/confi_dataset.yaml"

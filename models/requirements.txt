@@ -1,3 +1,4 @@
 ultralytics
 numpy
 scikit-learn
+pillow
