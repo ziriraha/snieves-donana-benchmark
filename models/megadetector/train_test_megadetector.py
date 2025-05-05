@@ -1,10 +1,6 @@
-from utils import Tester
+from utils import Tester, DATASET_YAML, IMAGES_PATH
 import shutil
 import os
-
-DATASET_YAML = "/home/usuario/Documentos/ziri/dataset/dataset.yaml"
-TEST_PATH = "/home/usuario/Documentos/ziri/dataset/test"
-IMAGES_PATH = os.path.join(TEST_PATH, 'images')
 
 WEIGHTS_PATH = "yolov5/runs/train/exp/weights/best.pt"
 SAVE_PATH = "./megadetector_trained.pt"
@@ -30,7 +26,7 @@ print("Saving model...")
 shutil.copy(WEIGHTS_PATH, SAVE_PATH)
 
 print("Initializing Tester...")
-tester = Tester('megadetector', TEST_PATH)
+tester = Tester('megadetector')
 
 print("Running inference on test images")
 os.system(f"python3 detect.py --weights {WEIGHTS_PATH} --source {IMAGES_PATH} --max-det 1 --device 0 --save-txt --nosave")

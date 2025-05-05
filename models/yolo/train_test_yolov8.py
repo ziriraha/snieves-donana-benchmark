@@ -1,25 +1,23 @@
 from ultralytics import YOLO
-from utils import Tester
+from utils import Tester, DATASET_YAML
 import os
 
 os.system("rm -rf train_test_yolo")
 os.mkdir("train_test_yolo")
 os.chdir("train_test_yolo")
 
-DATASET = '/home/usuario/Documentos/ziri/dataset/dataset.yaml'
-TEST = '/home/usuario/Documentos/ziri/dataset/test'
 SAVE_LOCATION = './yolo_trained.pt'
 
 # Training
 model = YOLO('yolov8s')
 print('Training model...')
-results = model.train(data=DATASET, epochs=20, imgsz=640, batch=16, save_period=1)
+results = model.train(data=DATASET_YAML, epochs=20, imgsz=640, batch=16, save_period=1)
 print('Training finished\nSaving model...')
 model.save(SAVE_LOCATION)
 
 # Testing
 print("Initializing Tester...")
-tester = Tester('yolo', TEST)
+tester = Tester('yolo')
 
 print("Importing model...")
 model = YOLO(SAVE_LOCATION)

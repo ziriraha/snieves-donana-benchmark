@@ -1,11 +1,7 @@
 import os
 import shutil
-from utils import Tester
+from utils import Tester, CONFI_DATASET_YAML, IMAGES_PATH
 from PIL import Image
-
-DATASET_YAML = "/home/usuario/Documentos/ziri/dataset/confi_dataset.yaml"
-TEST_PATH = "/home/usuario/Documentos/ziri/dataset/test"
-IMAGES_PATH = os.path.join(TEST_PATH, 'images')
 
 WEIGHTS_PATH = "fastercnn/outputs/training/res_1/best_model.pth"
 SAVE_PATH = "./fasterrcnn_trained.pt"
@@ -22,17 +18,17 @@ os.system("git clone https://github.com/sovit-123/fastercnn-pytorch-training-pip
 os.system("pip install -r fasterrcnn/requirements.txt")
 
 print("Training FasterRCNN model...")
-os.system(f"python fasterrcnn/train.py --data {DATASET_YAML} --model fasterrcnn_resnet50_fpn_v2 --epochs 20 --batch 4")
+os.system(f"python fasterrcnn/train.py --data {CONFI_DATASET_YAML} --model fasterrcnn_resnet50_fpn_v2 --epochs 20 --batch 4")
 print("Training finished")
 
 print("Saving model...")
 shutil.copy(WEIGHTS_PATH, SAVE_PATH)
 
 print("Initializing Tester...")
-tester = Tester("fasterrcnn", TEST_PATH)
+tester = Tester("fasterrcnn")
 
 print("Running inference on test images")
-os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {DATASET_YAML}")
+os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {CONFI_DATASET_YAML}")
 
 print("Processing results...")
 results = {}

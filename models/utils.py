@@ -2,12 +2,18 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 import numpy as np
 import os
 
+DATASET_YAML = '/home/usuario/Documentos/ziri/dataset/dataset.yaml'
+CONFI_DATASET_YAML = '/home/usuario/Documentos/ziri/dataset/confi_dataset.yaml'
+TEST_PATH = '/home/usuario/Documentos/ziri/dataset/test'
+IMAGES_PATH = os.path.join(TEST_PATH, 'images')
+
+
 class Tester:
-    def __init__(self, name, test_path):
+    def __init__(self, name):
         self.model_name = name
-        if not os.path.exists(test_path): raise Exception("Test directory doesn't exist")
-        self.images_folder = os.path.join(test_path, 'images')
-        self.labels_folder = os.path.join(test_path, 'labels')
+        if not os.path.exists(TEST_PATH): raise Exception("Test directory doesn't exist")
+        self.images_folder = os.path.join(TEST_PATH, 'images')
+        self.labels_folder = os.path.join(TEST_PATH, 'labels')
         self.reset_vals()
 
     def reset_vals(self):

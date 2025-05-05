@@ -10,3 +10,9 @@ The `utils.py` file contains helper functions used on each of the scripts. When 
 
 ## Datasets
 For training some models expect a specific format for the dataset. Megadetector and YOLO use the same format (`dataset.yaml`). Faster RCNN takes a different format (`confi_dataset.yaml`). More information about these datasets in the _dataset_ directory.
+
+## Environment definition
+Modify the constant in the `utils.py` file:
+- DATASET_YAML: the absolute path to the dataset.yaml file.
+- CONFI_DATASET_YAML: the absolute path to the confi_dataset.yaml file.
+- TEST_PATH: the absolute path to the downloaded test dataset split.
