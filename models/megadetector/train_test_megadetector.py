@@ -1,52 +1,56 @@
-from utils import calculate_iou, calculate_metrics, save_metrics_to_txt
+from utils import Tester
+import shutil
 import os
+
+DATASET_YAML = "/home/usuario/Documentos/ziri/dataset/dataset.yaml"
+TEST_PATH = "/home/usuario/Documentos/ziri/dataset/test"
+IMAGES_PATH = os.path.join(TEST_PATH, 'images')
+
+WEIGHTS_PATH = "yolov5/runs/train/exp/weights/best.pt"
+SAVE_PATH = "./megadetector_trained.pt"
+RUN_PATH = "yolov5/runs/detect/exp/labels"
 
 os.system("rm -rf train_test_megadetector")
 os.mkdir("train_test_megadetector")
 os.chdir("train_test_megadetector")
 
 print("Downloading MegaDetector model...")
-os.mkdir("models")
-os.chdir("models/")
 os.system("wget https://github.com/agentmorris/MegaDetector/releases/download/v5.0/md_v5a.0.0.pt")
 
 print("Downloading YOLOv5...")
-os.chdir("..")
 os.system("git clone https://github.com/ultralytics/yolov5.git")
-os.chdir("yolov5")
-os.system("pip install -qr requirements.txt")
+os.system("pip install -qr yolov5/requirements.txt")
 
 print("Training MegaDetector model...")
-os.system("python train.py --data ../../dataset/dataset.yaml --weights ../models/md_v5a.0.0.pt --epochs 20 --batch-size 16 --imgsz 640 --freeze 20 --save-period 1")
+os.system(f"python yolov5/train.py --data {DATASET_YAML} --weights ./md_v5a.0.0.pt --epochs 20 --batch-size 16 --imgsz 640 --freeze 20 --save-period 1")
 print("Training finished")
 
-true_val = []
-pred_val = []
-iou = []
+print("Saving model...")
+shutil.copy(WEIGHTS_PATH, SAVE_PATH)
 
-for label in os.listdir(f'../dataset/test/labels'):
-    try:
-        with open(f'../dataset/test/labels/{label}', 'r') as f:
-            si = f.readline().split(" ")
-            true = int(si[0])
-            true_box = [float(si[1]), float(si[2]), float(si[3]), float(si[4])]
+print("Initializing Tester...")
+tester = Tester('megadetector', TEST_PATH)
 
-        with open(f'yolov5/runs/detect/exp/labels/{label}', 'r') as f:
-            si = f.readline().split(" ")
-            pred = int(si[0])
-            pred_box = [float(si[1]), float(si[2]), float(si[3]), float(si[4])]
+print("Running inference on test images")
+os.system(f"python3 detect.py --weights {WEIGHTS_PATH} --source {IMAGES_PATH} --max-det 1 --device 0 --save-txt --nosave")
 
-        iou.append(calculate_iou(pred_box, true_box))
-        true_val.append(true)
-        pred_val.append(pred)
-    except Exception as e: print(e)
+def get_pred(img_name):
+    label = os.path.join(RUN_PATH, f'{img_name}.txt')
+    if not os.path.exists(label): return -1, None
 
-with open(f"results_test_megadetector.txt", "w") as file:
-    file.write("True vals: " + str(true_val) + " \n")
-    file.write("Pred vals: " + str(pred_val) + " \n")
-    file.write("IoU vals: " + str(iou) + " \n")
+    with open(label, 'r') as f:
+        clas, *bbox = f.readline().split()
+        pcls = int(clas)
+        pbbox = list(map(float, bbox))
 
-metrics = calculate_metrics(true_val, pred_val, iou)
-print(metrics)
+    return pcls, pbbox
 
-save_metrics_to_txt(metrics, "test_results_megadetector")
+print("Running tester (validation of the results)")
+tester.run(get_pred)
+
+print("Tester finished\nSaving results...")
+tester.calculate_metrics()
+tester.save_metrics_to_txt()
+tester.save_vals_to_txt()
+
+print("Done.")
