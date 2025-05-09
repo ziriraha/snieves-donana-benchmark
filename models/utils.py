@@ -39,8 +39,7 @@ class Tester:
         return real_cls, real_box
 
     def run(self, get_pred):
-        images = os.listdir(self.images_folder)
-        for img in images:
+        for img in os.listdir(self.images_folder):
             if not img.endswith('.jpg'): continue
             img_name = img.split('.')[0]
             rcls, rbbox = self.get_real(img_name)
@@ -51,27 +50,6 @@ class Tester:
             # No IOU if empty image
             if rbbox and pbbox: self.iou.append(self.calculate_iou(pbbox, rbbox))
 
-    def calculate_metrics(self):
-        self.metrics = {
-            "precision": precision_score(self.true, self.pred, average='weighted'),
-            "recall": recall_score(self.true, self.pred, average='weighted'),
-            "f1": f1_score(self.true, self.pred, average='weighted'),
-            "iou_avg": sum(self.iou) / len(self.iou) if self.iou else 0,
-            "conf_matrix": confusion_matrix(self.true, self.pred)
-        }
-        return self.metrics
-
-    def save_metrics_to_txt(self, filename = None):
-        if not filename: filename = f"{self.model_name}_metrics"
-        with open(f"{filename}.txt", "w") as file:
-            file.write("Precision: " + str(self.metrics['precision']) + "\n")
-            file.write("Recall: " + str(self.metrics['recall']) + "\n")
-            file.write("F1-score: " + str(self.metrics['f1']) + "\n")
-            file.write("IoU: " + str(self.metrics['iou_avg']) + "\n")
-            file.write("Confusion Matrix:\n")
-            np.savetxt(file, self.metrics['conf_matrix'], fmt='%d')
-            file.write("\n\n")
-    
     def save_vals_to_txt(self, filename = None):
         if not filename: filename = f"{self.model_name}_values"
         with open(f"{filename}.txt", "w") as file:

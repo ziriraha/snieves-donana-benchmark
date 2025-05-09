@@ -44,8 +44,6 @@ print("Running tester (validation of the results)")
 tester.run(get_pred)
 
 print("Tester finished\nSaving results...")
-tester.calculate_metrics()
-tester.save_metrics_to_txt()
 tester.save_vals_to_txt()
 
 print("Done.")

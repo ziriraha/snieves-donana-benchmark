@@ -30,7 +30,7 @@ os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} -
 
 print("Processing results...")
 results = {}
-with open("/home/usuario/Documentos/ziri/train_test_fasterrcnn/fastercnn-pytorch-training-pipeline/outputs/inference/res_1/boxes.csv", "r") as file:
+with open(RUN_PATH, "r") as file:
     for line in file.readlines()[1:]:
         img_name, pred_label, pred_xmin, pred_xmax, pred_ymin, pred_ymax, pred_width, pred_height, _ = line.split(',')
         with Image.open(os.path.join(IMAGES_PATH, f'{img_name}.jpg')) as img:
@@ -52,8 +52,6 @@ print("Running tester (validation of the results)")
 tester.run(get_pred)
 
 print("Tester finished\nSaving results...")
-tester.calculate_metrics()
-tester.save_metrics_to_txt()
 tester.save_vals_to_txt()
 
 print("Done.")
