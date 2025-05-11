@@ -12,7 +12,7 @@ import PIL.Image as Image
 import os
 import numpy as np
 
-data = pd.read_csv('csv/big_csv/merged_data.csv')
+data = pd.read_csv('raw.csv')
 
 def get_datetime(image):
     ret = "nan"
@@ -96,4 +96,4 @@ all_data = pd.read_csv('data0.csv')
 for i in range(1, quant):
     dataq = pd.read_csv(f'data{i}.csv')
     all_data = pd.concat([all_data, dataq])
-all_data.to_csv('all_data.csv', index=False)
+all_data.to_csv('full.csv', index=False)

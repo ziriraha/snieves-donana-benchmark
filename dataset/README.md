@@ -3,6 +3,12 @@ In this directory there will be files for the analysis and processing of the dat
 
 The confi_dataset.yaml and dataset.yaml files are the ones needed by the models to function.
 
+## CSVs
+In the releases section of the repository are all the csvs of the project:
+- `raw`: all the image paths provided.
+- `full`: only the images from the species we are interested in. Also contains date and time information of the image. Discards non existant image paths too.
+- `processed`: images taken in the same minute are discarded but one.
+
 ## Processing
 The api_alldata.py script makes the csv for all the data. (full.csv)
 
