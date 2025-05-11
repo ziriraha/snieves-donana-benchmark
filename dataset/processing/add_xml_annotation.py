@@ -1,7 +1,10 @@
-import PIL.Image as Image
 import os
+import argparse
 
-classes = ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
+import PIL.Image as Image
+
+CLASSES = ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
+SPLITS = ['train', 'val']
 
 def getAnnotationXML(txt, size_x, size_y):
     txt = txt.split(" ")
@@ -12,7 +15,7 @@ def getAnnotationXML(txt, size_x, size_y):
             int(float(txt[4])*size_y)]
     return f"""<annotation>
             <object>
-                    <name>{classes[cls]}</name>
+                    <name>{CLASSES[cls]}</name>
                     <pose>Unspecified</pose>
                     <truncated>0</truncated>
                     <difficult>0</difficult>
@@ -26,19 +29,31 @@ def getAnnotationXML(txt, size_x, size_y):
             </object>
     </annotation>"""
 
-for dataset in ["train", "val"]:
-    os.makedirs(f"dataset/{dataset}/xml_labels", exist_ok=True)
-    for img in os.listdir(f"dataset/{dataset}/images"):
-        if img.endswith(".jpg"):
-            try:
-                img_name = img.split(".")[0]
-                with Image.open(f"dataset/{dataset}/images/{img}") as image:
-                    size_x, size_y = image.size
-                with open(f"dataset/{dataset}/labels/{img_name}.txt", "r") as f:
-                    txt = f.read()
-                xml = getAnnotationXML(txt, size_x, size_y)
-                with open(f"dataset/{dataset}/xml_labels/{img_name}.xml", "w") as f:
-                    f.write(xml)
-            except FileNotFoundError as fr:
-                pass
-print("Done!")
+def main(dataset):
+    for split in SPLITS:
+        images_dir = os.path.join(dataset, split, 'images')
+        labels_dir = os.path.join(dataset, split, 'labels')
+        xml_labels_dir = os.path.join(dataset, split, 'xml_labels')
+
+        os.makedirs(xml_labels_dir, exist_ok=True)
+
+        for img in os.listdir(images_dir):
+            if not img.endswith(".jpg"): continue
+
+            with Image.open(os.path.join(images_dir, img)) as image:
+                size_x, size_y = image.size
+
+            img_name = img.split(".")[:-1]
+            label_path = os.path.join(labels_dir, f'{img_name}.txt')
+            if os.path.exists(label_path):
+                with open(label_path, "r") as f: txt = f.read()
+                with open(os.path.join(xml_labels_dir, f'{img_name}.xml'), "w") as f:
+                    f.write(getAnnotationXML(txt, size_x, size_y))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Add XML annotation to dataset.")
+    parser.add_argument("dataset", help="Path to the dataset directory")
+    args = parser.parse_args()
+    
+    main(args.dataset)
