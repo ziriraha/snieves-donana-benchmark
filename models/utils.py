@@ -1,5 +1,3 @@
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
-import numpy as np
 import os
 
 DATASET_YAML = '/home/usuario/Documentos/ziri/dataset/dataset.yaml'
