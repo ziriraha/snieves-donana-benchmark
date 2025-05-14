@@ -12,6 +12,8 @@ from PIL.ExifTags import TAGS
 from image_downloader import get_image_from_minio
 
 DEFAULT_CPU = 2
+MAX_CPU = 8
+SAVE_PATH = './output.csv'
 
 def get_datetime_for_image(image):
     datetime = "nan"
@@ -35,7 +37,7 @@ def get_datetime_for_dataframe(data):
                     data.at[index, 'datetime'] = get_datetime_for_image(image)
     return data
 
-def main(dataframe, output='./output.csv', max_cpu=8):
+def main(dataframe, output=SAVE_PATH, max_cpu=MAX_CPU):
     n = min(os.cpu_count() or DEFAULT_CPU, max_cpu)
     splits = np.array_split(dataframe, n)
 
@@ -47,10 +49,10 @@ def main(dataframe, output='./output.csv', max_cpu=8):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract datetime from images in a CSV file.")
-    parser.add_argument("input_csv", help="Path to the input CSV file")
-    parser.add_argument("output_csv", type=str, default='./output.csv', help="Path to the output CSV file (default: ./output.csv)")
-    parser.add_argument("--max_cpu", type=int, default=8, help="Maximum number of CPUs to use (default: 8)")
+    parser.add_argument("input", help="Path to the input CSV file")
+    parser.add_argument("--output", type=str, default=SAVE_PATH, help=f"Path to the output CSV file (default: {SAVE_PATH})")
+    parser.add_argument("--max_cpu", type=int, default=MAX_CPU, help=f"Maximum number of CPUs to use (default: {MAX_CPU})")
 
     args = parser.parse_args()
 
-    main(pd.read_csv(args.input_csv), args.output_csv, max_cpu=args.max_cpu)
+    main(pd.read_csv(args.input), args.output, max_cpu=args.max_cpu)
