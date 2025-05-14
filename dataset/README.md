@@ -4,7 +4,7 @@ In this directory there will be files for the analysis and processing of the dat
 The `confi_dataset.yaml` and `dataset.yaml` files are the ones needed by the models to function.
 
 ## Classes provided
-| Label | Scientific name          | Name (English)                           |
+| Label | Scientific name          | Name                                     |
 |-------|--------------------------|------------------------------------------|
 | equ   | Equus ferus              | horse                                    |
 | cer   | Cervus elaphus           | red deer                                 |
