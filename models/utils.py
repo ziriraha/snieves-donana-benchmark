@@ -48,9 +48,8 @@ class Tester:
             # No IOU if empty image
             if rbbox and pbbox: self.iou.append(self.calculate_iou(pbbox, rbbox))
 
-    def save_vals_to_txt(self, filename = None):
-        if not filename: filename = f"{self.model_name}_values"
-        with open(f"{filename}.txt", "w") as file:
+    def save_vals_to_txt(self, filename = 'values.txt'):
+        with open(filename, "w") as file:
             file.write("True vals: " + str(self.true) + " \n")
             file.write("Pred vals: " + str(self.pred) + " \n")
             file.write("IoU vals: " + str(self.iou) + " \n")
