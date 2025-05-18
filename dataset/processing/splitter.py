@@ -82,5 +82,6 @@ if __name__ == "__main__":
     RANDOM_STATE = args.random_state
     MEAN_WEIGHT = args.mean_weight
     OVERRIDE_TOP = args.override_top
+    SAVE_DIR = args.save
 
-    main(args.dataset, args.save)
+    main(args.dataset)

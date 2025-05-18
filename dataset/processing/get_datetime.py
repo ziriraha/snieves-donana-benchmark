@@ -12,6 +12,7 @@ from PIL.ExifTags import TAGS
 from image_downloader import get_image_from_minio
 
 DEFAULT_CPU = 2
+
 MAX_CPU = 8
 SAVE_PATH = './output.csv'
 
@@ -55,4 +56,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(pd.read_csv(args.input), args.output, max_cpu=args.max_cpu)
+    SAVE_PATH = args.output
+    MAX_CPU = args.max_cpu
+
+    main(pd.read_csv(args.input))

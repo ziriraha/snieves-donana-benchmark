@@ -5,7 +5,7 @@ import PIL.Image as Image
 
 CLASSES = ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
 SPLITS = ['train', 'val']
-DEFAULT_XML_NAME = 'xml_labels'
+XML_NAME = 'xml_labels'
 
 def getAnnotationXML(txt, size_x, size_y, classes=CLASSES):
     txt = txt.split(" ")
@@ -30,7 +30,7 @@ def getAnnotationXML(txt, size_x, size_y, classes=CLASSES):
             </object>
     </annotation>"""
 
-def main(dataset, splits=SPLITS, folder_name=DEFAULT_XML_NAME, classes=CLASSES):
+def main(dataset, splits=SPLITS, folder_name=XML_NAME):
     for split in splits:
         images_dir = os.path.join(dataset, split, 'images')
         labels_dir = os.path.join(dataset, split, 'labels')
@@ -49,15 +49,19 @@ def main(dataset, splits=SPLITS, folder_name=DEFAULT_XML_NAME, classes=CLASSES):
             if os.path.exists(label_path):
                 with open(label_path, "r") as f: txt = f.read()
                 with open(os.path.join(xml_labels_dir, f'{img_name}.xml'), "w") as f:
-                    f.write(getAnnotationXML(txt, size_x, size_y, classes))
+                    f.write(getAnnotationXML(txt, size_x, size_y))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Add XML annotation to dataset.")
     parser.add_argument("dataset", help="Path to the dataset directory")
-    parser.add_argument("--name", type=str, default=DEFAULT_XML_NAME, help=f"Folder name for xml labels (default: {DEFAULT_XML_NAME})")
+    parser.add_argument("--name", type=str, default=XML_NAME, help=f"Folder name for xml labels (default: {XML_NAME})")
     parser.add_argument("--splits", type=str, default=SPLITS, help=f"Splits to process (default: {str(SPLITS)})")
     parser.add_argument("--classes", nargs='+', default=CLASSES, help=f"List of classes (default: {str(CLASSES)})")
     args = parser.parse_args()
+
+    XML_NAME = args.name
+    SPLITS = args.splits
+    CLASSES = args.classes
     
-    main(args.dataset, args.splits, args.name, args.classes)
+    main(args.dataset)
