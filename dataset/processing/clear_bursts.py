@@ -1,9 +1,7 @@
 import os
 import argparse
 import concurrent.futures
-
 import pandas as pd
-import numpy as np
 
 DEFAULT_CPU = 2
 
@@ -31,12 +29,12 @@ def main(dataframe, output=SAVE_PATH, max_cpu=MAX_CPU):
                         dataframe[dataframe['species'].isin(EXCLUDE)]], ignore_index=True)
     
     to_filter = dataframe.loc[~dataframe.index.isin(keep.index)]
-    to_filter['date'] = pd.to_datetime(to_filter['date'], format='%Y:%m:%d %H:%M:%S')
+    to_filter['date'] = pd.to_datetime(to_filter['date'], format='%Y-%m-%d %H:%M:%S')
+
+    groups = [group for _, group in to_filter.groupby('species', group_keys=False)]
 
     n = min(os.cpu_count() or DEFAULT_CPU, max_cpu)
-    groups = np.array_split(to_filter, n)
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
         futures = [executor.submit(process_group, group) for group in groups]
 
     results = [future.result() for future in futures] + [keep]
