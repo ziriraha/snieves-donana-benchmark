@@ -7,7 +7,7 @@ CLASSES = ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep'
 SPLITS = ['train', 'val']
 XML_NAME = 'xml_labels'
 
-def getAnnotationXML(txt, size_x, size_y, classes=CLASSES):
+def get_xml_annotation(txt, size_x, size_y, classes=CLASSES):
     txt = txt.split(" ")
     cls = int(txt[0])
     bbox = [int(float(txt[1])*size_x), 
@@ -49,7 +49,7 @@ def main(dataset, splits=SPLITS, folder_name=XML_NAME):
             if os.path.exists(label_path):
                 with open(label_path, "r") as f: txt = f.read()
                 with open(os.path.join(xml_labels_dir, f'{img_name}.xml'), "w") as f:
-                    f.write(getAnnotationXML(txt, size_x, size_y))
+                    f.write(get_xml_annotation(txt, size_x, size_y))
 
 
 if __name__ == "__main__":
