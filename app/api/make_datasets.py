@@ -47,18 +47,13 @@ def make_custom_zip(dataframe, name):
     # If new bboxes are added, update the all_data.csv file
     if not res:
         logger.info(f'All data updated with new bboxes from {name}')
-        all_data = pd.concat([pd.read_csv(CSV_DIRECTORY + 'all_data_0.csv'),
-                              pd.read_csv(CSV_DIRECTORY + 'all_data_1.csv')], ignore_index=True)
+        all_data = pd.read_csv(CSV_DIRECTORY + 'all_data.csv', ignore_index=True)
         for _, row in res.iterrows():
             all_data.loc[all_data['path'] == row['path']] = row
 
-        os.rename(CSV_DIRECTORY + 'all_data_0.csv',
-                  CSV_DIRECTORY + f'all_data_0_old{datetime.datetime.now()}.csv')
-        all_data.iloc[:len(all_data)//2].to_csv(CSV_DIRECTORY + 'all_data_0.csv', index=False)
-        
-        os.rename(CSV_DIRECTORY + 'all_data_1.csv',
-                    CSV_DIRECTORY + f'all_data_1_old{datetime.datetime.now()}.csv')
-        all_data.iloc[len(all_data)//2:].to_csv(CSV_DIRECTORY + 'all_data_1.csv', index=False)
+        os.rename(CSV_DIRECTORY + 'all_data.csv',
+                  CSV_DIRECTORY + f'all_data_old{datetime.datetime.now()}.csv')
+        all_data.to_csv(CSV_DIRECTORY + 'all_data.csv', index=False)
 
     shutil.make_archive(CUSTOM_DIRECTORY + name, 'zip', CUSTOM_DIRECTORY + "temp/" + name)
     #os.system(f'zip -r {name}.zip {name}')

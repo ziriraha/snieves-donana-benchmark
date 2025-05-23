@@ -1,14 +1,15 @@
 from dotenv import load_dotenv
 from flask import Flask
 import os
-from api import api_bp
 import logging
 
+from utils import make_dataset_zip
+from utils.constants import DATASET_NAMES, ZIP_DIRECTORY, CUSTOM_DIRECTORY
+
+from api import api_bp
+from views import views_bp
+
 load_dotenv()
-
-app = Flask(__name__)
-
-app.register_blueprint(api_bp)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,6 +19,11 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+app = Flask(__name__)
+
+app.register_blueprint(api_bp, url_prefix='/api')
+app.register_blueprint(views_bp, url_prefix='/')
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +36,6 @@ if __name__ == '__main__':
                 make_dataset_zip(dataset)
     else: 
         os.makedirs(ZIP_DIRECTORY)
-        # with concurrent.futures.ThreadPoolExecutor() as executor:
-        #    executor.map(make_dataset_zip, DATASET_NAMES)
         for dataset in DATASET_NAMES:
             make_dataset_zip(dataset)
 
