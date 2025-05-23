@@ -1,10 +1,12 @@
-from constants import CUSTOM_DIRECTORY, DATASET_NAMES, CSV_DIRECTORY, ZIP_DIRECTORY
+from app.utils.constants import CUSTOM_DIRECTORY, DATASET_NAMES, CSV_DIRECTORY, ZIP_DIRECTORY
 from utils import download_images
 import os
-import logger
 import pandas as pd
 import datetime
 import shutil
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Will create a zip full of images from dataset.
 def make_dataset_zip(dataset_name):
@@ -25,7 +27,7 @@ def make_dataset_zip(dataset_name):
     # Download images
     res = download_images(ZIP_DIRECTORY + 'temp/', data, dataset_name)
     # If new bboxes are added, update the dataset csv file
-    if type(res) != None:
+    if not res:
         os.rename(CSV_DIRECTORY + dataset_name + '.csv', 
                   CSV_DIRECTORY + dataset_name + f'_old{datetime.datetime.now()}.csv')
         res.to_csv(CSV_DIRECTORY + dataset_name + '.csv', index=False)
@@ -43,8 +45,8 @@ def make_custom_zip(dataframe, name):
     # Download images
     res = download_images(CUSTOM_DIRECTORY + 'temp/', dataframe, name)
     # If new bboxes are added, update the all_data.csv file
-    if type(res) != None:
-        logger.log_update(f'All data updated with new bboxes from {name}')
+    if not res:
+        logger.info(f'All data updated with new bboxes from {name}')
         all_data = pd.concat([pd.read_csv(CSV_DIRECTORY + 'all_data_0.csv'),
                               pd.read_csv(CSV_DIRECTORY + 'all_data_1.csv')], ignore_index=True)
         for _, row in res.iterrows():

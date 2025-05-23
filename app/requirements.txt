@@ -1,5 +1,5 @@
 pandas
-megadetector==5.0.7
+megadetector
 Flask
 minio
 yolov5

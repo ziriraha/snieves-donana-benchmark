@@ -1,30 +1,29 @@
-from flask import after_this_request, request, jsonify, send_from_directory, Blueprint
-from constants import CSV_DIRECTORY, PARK_NAMES, CUSTOM_DIRECTORY, ERROR_MESSAGES, SPECIES_NAMES
+from flask import after_this_request, request, jsonify, send_from_directory
+from app.utils.constants import CSV_DIRECTORY, PARK_NAMES, CUSTOM_DIRECTORY, ERROR_MESSAGES, SPECIES_NAMES
 from make_datasets import make_custom_zip
 from utils import verify_date, verify_num_files
-import logger
 import os
 import pandas as pd
+import logging
 
-parkspecies = Blueprint('parkspecies', __name__)
+logger = logging.getLogger(__name__)
 
 # Obtener datos por parque natural, especie, fecha y número de ficheros (ambos opcionales si no se indica se devuelven todos) (zip)
-@parkspecies.route('/park/<park_name>/species/<species_name>', methods=['GET'])
 def get_park_species_images(park_name, species_name):
     # ERROR HANDLING
     if park_name not in PARK_NAMES:
-        logger.log_error(f'Park not found: {park_name}')
+        logger.error(f'Park not found: {park_name}')
         return jsonify({'error': ERROR_MESSAGES['park']}), 404
     if species_name not in SPECIES_NAMES:
-        logger.log_error(f'Species not found: {species_name}')
+        logger.error(f'Species not found: {species_name}')
         return jsonify({'error': ERROR_MESSAGES['species']}), 404
     date = request.args.get('date')
     if date and not verify_date(date):
-        logger.log_error(f'Invalid date: {date}')
+        logger.error(f'Invalid date: {date}')
         return jsonify({'error': ERROR_MESSAGES['date']}), 400
     num_files = request.args.get('num_files')
     if num_files and not verify_num_files(num_files):
-        logger.log_error(f'Invalid number of files: {num_files}')
+        logger.error(f'Invalid number of files: {num_files}')
         return jsonify({'error': ERROR_MESSAGES['num_files']}), 400
 
     zip_name = f'{park_name}_{species_name}'
@@ -41,10 +40,10 @@ def get_park_species_images(park_name, species_name):
         data = data.sample(n=int(num_files), random_state=1)
 
     if len(data) == 0:
-        logger.log_error(f'No data found for {park_name} - {species_name} at {date} max {num_files}')
+        logger.error(f'No data found for {park_name} - {species_name} at {date} max {num_files}')
         return jsonify({'error': ERROR_MESSAGES['no_data']}), 404
     
-    logger.log_message(f'PARK_SPECIES_REQUEST: {park_name} - {species_name} at {date} max {num_files} ({zip_name}), total of {len(data)} images.')
+    logger.info(f'PARK_SPECIES_REQUEST: {park_name} - {species_name} at {date} max {num_files} ({zip_name}), total of {len(data)} images.')
 
     # Creating zip
     make_custom_zip(data, zip_name)
