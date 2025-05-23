@@ -1,13 +1,13 @@
-import os
 import argparse
 import concurrent.futures
-from io import BytesIO
+import os
 from datetime import datetime
+from io import BytesIO
 
 import pandas as pd
 from PIL import Image
 
-from image_downloader import get_image_from_minio
+from image_downloader import Downloader
 
 MAX_THREADS = 5 * (os.cpu_count() or 4)
 SAVE_PATH = './output.csv'
@@ -15,9 +15,9 @@ SAVE_PATH = './output.csv'
 def get_datetime_for_image(image_path):
     date = "nan"
     try:
-        response = get_image_from_minio(image_path)
+        response = Downloader.get_image_from_minio(image_path)
         with Image.open(BytesIO(response.data)) as image:
-            exifdata = image.getexif().get(306, None)
+            exifdata = image.getexif().get(306, None) or image.getexif().get(36867, None)
             decoded_exif = str(exifdata.decode('utf-8', errors='ignore') if isinstance(exifdata, bytes) else exifdata)
             date = datetime.strptime(decoded_exif, '%Y:%m:%d %H:%M:%S') if decoded_exif else None
             date = date.strftime('%Y-%m-%d %H:%M:%S') if date else "nan"
