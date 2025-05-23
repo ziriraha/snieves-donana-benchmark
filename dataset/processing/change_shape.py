@@ -1,20 +1,42 @@
+import argparse
 import os
 
-# files are in <train,test,val>/<park>/<species>/<image>.jpg and <train,test,val>/<park>/<species>/<image>.txt
-# change to <train,test,val>/images/<image>.jpg and <train,test,val>/labels/<image>.txt
-for subset in os.listdir("dataset"):
-    if subset == "dataset.yaml":
-        continue
-    os.makedirs(f"dataset/{subset}/images", exist_ok=True)
-    os.makedirs(f"dataset/{subset}/labels", exist_ok=True)
-    for park in os.listdir(f"dataset/{subset}"):
-        if park == "images" or park == "labels":
-                continue
-        for species in os.listdir(f"dataset/{subset}/{park}"):
-            if species.endswith(".cache"):
-                continue
-            for image in os.listdir(f"dataset/{subset}/{park}/{species}"):
-                if image.endswith(".jpg"):
-                    os.rename(f"dataset/{subset}/{park}/{species}/{image}", f"dataset/{subset}/images/{image}")
-                elif image.endswith(".txt"):
-                    os.rename(f"dataset/{subset}/{park}/{species}/{image}", f"dataset/{subset}/labels/{image}")
+IMAGES_PATH = 'images'
+LABELS_PATH = 'labels'
+
+def change_shape(path):
+    def move_file(file_path, filename):
+        if filename.endswith(".jpg"): target = IMAGES_PATH
+        elif filename.endswith(".txt"): target = LABELS_PATH
+        else: return
+        os.rename(file_path, os.path.join(path, target, filename))
+
+    for park in os.listdir(path):
+        park_path = os.path.join(path, park)
+        if not os.path.isdir(park_path): continue
+
+        for species in os.listdir(park_path):
+            species_path = os.path.join(park_path, species)
+            if not os.path.isdir(species_path): continue
+
+            for filename in os.listdir(species_path):
+                file_path = os.path.join(species_path, filename)                
+                move_file(file_path, filename)
+
+def main(dataset_path):
+    for subset in os.listdir(dataset_path):
+        subset_path = os.path.join(dataset_path, subset)
+        if not os.path.isdir(subset_path): continue
+
+        change_shape(subset_path)
+
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(description="Change shape of dataset from <set>/<park>/<species>/<image>.jpg|txt to <set>/images|labels/<image>.jpg|txt")
+    argparser.add_argument("dataset_path", type=str, help="Path to the dataset folder")
+
+    args = argparser.parse_args()
+
+    if not os.path.isdir(args.dataset_path):
+        raise ValueError(f"Dataset path {args.dataset_path} is not a directory")
+    
+    main(args.dataset_path)
