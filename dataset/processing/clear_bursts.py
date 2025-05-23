@@ -3,9 +3,7 @@ import argparse
 import concurrent.futures
 import pandas as pd
 
-DEFAULT_CPU = 2
-
-MAX_CPU = 8
+MAX_CPU = os.cpu_count() or 4
 EXCLUDE = ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'mel', 'lep', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'mafo', 'capi', 'caae', 'ovor', 'caca']
 TIME_INTERVAL = 1
 SAVE_PATH = './output.csv'
@@ -22,19 +20,18 @@ def process_group(group, time_interval=TIME_INTERVAL):
         prev_time = row['date']
     return pd.DataFrame(filtered)
 
-def main(dataframe, output=SAVE_PATH, max_cpu=MAX_CPU):
+def main(dataframe, output=SAVE_PATH):
     dataframe = dataframe.reset_index(drop=True)
     
     keep = pd.concat([dataframe[pd.isnull(dataframe['date'])], 
-                        dataframe[dataframe['species'].isin(EXCLUDE)]], ignore_index=True)
+                      dataframe[dataframe['species'].isin(EXCLUDE)]], ignore_index=True)
     
     to_filter = dataframe.loc[~dataframe.index.isin(keep.index)]
     to_filter['date'] = pd.to_datetime(to_filter['date'], format='%Y-%m-%d %H:%M:%S')
 
     groups = [group for _, group in to_filter.groupby('species', group_keys=False)]
 
-    n = min(os.cpu_count() or DEFAULT_CPU, max_cpu)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_CPU) as executor:
         futures = [executor.submit(process_group, group) for group in groups]
 
     results = [future.result() for future in futures] + [keep]
@@ -51,9 +48,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    SAVE_PATH = args.output
     TIME_INTERVAL = args.time_interval
     MAX_CPU = args.max_cpu
     EXCLUDE = args.exclude
 
-    main(pd.read_csv(args.input))
+    main(pd.read_csv(args.input), args.output)
