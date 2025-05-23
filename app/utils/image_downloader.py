@@ -2,12 +2,9 @@ import os
 import shutil
 import uuid
 
-from dotenv import load_dotenv
 from megadetector.detection import run_detector
 from megadetector.visualization import visualization_utils as vis_utils
 from minio import Minio
-
-load_dotenv()
 
 MINIO_URL = os.environ.get('MINIO_URL')
 MINIO_BUCKET = os.environ.get('MINIO_BUCKET')

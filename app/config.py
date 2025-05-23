@@ -1,3 +1,10 @@
+import os
+
+MINIO_URL = os.environ.get('MINIO_URL')
+MINIO_BUCKET = os.environ.get('MINIO_BUCKET')
+MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY')
+MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY')
+
 CSV_DIRECTORY = 'csv/'
 ZIP_DIRECTORY = 'files/dataset_zip/'
 CUSTOM_DIRECTORY = 'files/custom_datasets/'

@@ -3,8 +3,7 @@ from flask import Flask
 import os
 import logging
 
-from utils import make_dataset_zip
-from utils.constants import DATASET_NAMES, ZIP_DIRECTORY, CUSTOM_DIRECTORY
+from api.make_datasets import make_dataset_zip
 
 from api import api_bp
 from views import views_bp
@@ -21,6 +20,8 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
+
+app.config.from_pyfile('config.py')
 
 app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(views_bp, url_prefix='/')
