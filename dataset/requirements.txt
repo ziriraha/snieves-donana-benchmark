@@ -6,3 +6,4 @@ ipykernel
 minio
 matplotlib
 seaborn
+python-dotenv

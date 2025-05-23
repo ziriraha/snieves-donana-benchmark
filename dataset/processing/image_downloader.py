@@ -1,28 +1,34 @@
 from minio import Minio
-from tokens import TOKEN_MINIO
 from md_visualization import visualization_utils as vis_utils
 import uuid
 from detection import run_detector
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
-MINIO_URL= '192.168.219.2:9000'
-MINIO_BUCKET= 'fauna-data'
-MINIO_ACCESS_KEY= 'fauna-reader'
-MINIO_SECRET_KEY= TOKEN_MINIO
+load_dotenv()
+
+MINIO_URL = os.environ.get('MINIO_URL')
+MINIO_BUCKET = os.environ.get('MINIO_BUCKET')
+MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY')
+MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY')
 
 classes = ['mus', 'rara', 'ory', 'emp', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca'] # class names
 
-
-mi_client = Minio(
+MINIO_CLIENT = Minio(
         MINIO_URL,
         access_key=MINIO_ACCESS_KEY,
         secret_key=MINIO_SECRET_KEY,
         secure=False,
     )
 
-def get_image_from_minio(image: Path, path_to_save: Path):
-    mi_client.fget_object(
+def get_image_from_minio(image):
+    return MINIO_CLIENT.get_object(
+        bucket_name=MINIO_BUCKET,
+        object_name=image)
+
+def download_image_from_minio(image: Path, path_to_save: Path):
+    MINIO_CLIENT.fget_object(
         bucket_name=MINIO_BUCKET,
         object_name=image.as_posix(),
         file_path=path_to_save.as_posix())
@@ -65,7 +71,7 @@ class DOWNLOADER:
         if park == "NOPARK":
             park = self.get_park(path)
         dire = self.DOWNLOAD_PATH + park + '/' + clase + '/' + str(uuid.uuid4())
-        get_image_from_minio(Path(path), Path(dire + '.jpg'))
+        download_image_from_minio(Path(path), Path(dire + '.jpg'))
         try:
             image = vis_utils.load_image(dire + '.jpg')
             image.save(dire + '.jpg', format='JPEG', quality=100)
@@ -89,7 +95,7 @@ class DOWNLOADER:
     # Downloads a single image and returns the path where it was saved.
     def download_image(self, path):
         res_path = self.DOWNLOAD_PATH + str(uuid.uuid4()) + '.jpg'
-        get_image_from_minio(Path(path), Path(res_path))
+        download_image_from_minio(Path(path), Path(res_path))
         return res_path
     
     # Downloads all the images from a dataframe and saves them in the folder specified.

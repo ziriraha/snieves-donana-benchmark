@@ -1,62 +1,52 @@
-import concurrent.futures
 import os
-import tempfile
-from pathlib import Path
 import argparse
+import concurrent.futures
+from io import BytesIO
+from datetime import datetime
 
-import numpy as np
 import pandas as pd
 from PIL import Image
-from PIL.ExifTags import TAGS
 
 from image_downloader import get_image_from_minio
 
-DEFAULT_CPU = 2
-
-MAX_CPU = 8
+MAX_THREADS = 5 * (os.cpu_count() or 4)
 SAVE_PATH = './output.csv'
 
-def get_datetime_for_image(image):
-    datetime = "nan"
-    exifdata = image.getexif()
+def get_datetime_for_image(image_path):
+    date = "nan"
     try:
-        for tag_id in exifdata:
-            tag = TAGS.get(tag_id, tag_id)
-            if tag == 'DateTime':
-                raw = exifdata.get(tag_id)
-                datetime = str(raw.decode('utf-8', errors='ignore') if isinstance(raw, bytes) else raw)
-                break
-    except Exception as err: print(err)
-    return datetime
+        response = get_image_from_minio(image_path)
+        with Image.open(BytesIO(response.data)) as image:
+            exifdata = image.getexif().get(306, None)
+            decoded_exif = str(exifdata.decode('utf-8', errors='ignore') if isinstance(exifdata, bytes) else exifdata)
+            date = datetime.strptime(decoded_exif, '%Y:%m:%d %H:%M:%S') if decoded_exif else None
+            date = date.strftime('%Y-%m-%d %H:%M:%S') if date else "nan"
+    except Exception as err: 
+        print(f"Error processing image {image_path}: {err}")
+    finally:
+        response.close()
+        response.release_conn()
+    return date
 
-def get_datetime_for_dataframe(data):
-    data.reset_index(drop=True, inplace=True)
-    for index, row in data.iterrows():
-        with tempfile.NamedTemporaryFile(suffix='.jpg') as file:
-            if get_image_from_minio(Path(row.path), Path(file)):
-                with Image.open(file) as image:
-                    data.at[index, 'datetime'] = get_datetime_for_image(image)
-    return data
+def get_datetime_for_row(row):
+    row['datetime'] = get_datetime_for_image(row.path)
+    return row
 
-def main(dataframe, output=SAVE_PATH, max_cpu=MAX_CPU):
-    n = min(os.cpu_count() or DEFAULT_CPU, max_cpu)
-    splits = np.array_split(dataframe, n)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=n) as executor:
-        futures = [executor.submit(get_datetime_for_dataframe, split) for split in splits]
-    
-    dataframe = pd.concat([future.result() for future in futures], ignore_index=True)
+def main(dataframe, output=SAVE_PATH):
+    print("Processing images in parallel...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        rows = list(executor.map(get_datetime_for_row, [row for _, row in dataframe.iterrows()]))
+    dataframe = pd.DataFrame(rows)
+    print(f"Done\nWriting output to file {output}")
     dataframe.to_csv(output, index=False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract datetime from images in a CSV file.")
-    parser.add_argument("input", help="Path to the input CSV file")
+    parser.add_argument("input_csv", help="Path to the input CSV file")
     parser.add_argument("--output", type=str, default=SAVE_PATH, help=f"Path to the output CSV file (default: {SAVE_PATH})")
-    parser.add_argument("--max_cpu", type=int, default=MAX_CPU, help=f"Maximum number of CPUs to use (default: {MAX_CPU})")
+    parser.add_argument("--max-threads", type=int, default=MAX_THREADS, help=f"Number of threads to use. (default: {MAX_THREADS})")
 
     args = parser.parse_args()
+    MAX_THREADS = args.max_threads
 
-    SAVE_PATH = args.output
-    MAX_CPU = args.max_cpu
-
-    main(pd.read_csv(args.input))
+    main(pd.read_csv(args.input_csv), args.output)
