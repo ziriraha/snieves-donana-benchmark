@@ -23,7 +23,7 @@ def train(model, save_path=SAVE_PATH):
 
 def test(model, save_path=SAVE_PATH):
     print("Initializing Tester...")
-    tester = Tester(MODEL)
+    tester = Tester()
 
     print("Importing model...")
     def get_pred(img_name):

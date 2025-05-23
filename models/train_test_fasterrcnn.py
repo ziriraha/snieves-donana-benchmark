@@ -29,7 +29,7 @@ def train(save_path=SAVE_PATH):
 
 def test(save_path=SAVE_PATH):
     print("Initializing Tester...")
-    tester = Tester(MODEL)
+    tester = Tester()
 
     print("Running inference on test images")
     os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {CONFI_DATASET_YAML}")

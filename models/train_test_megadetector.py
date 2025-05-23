@@ -31,7 +31,7 @@ def train(save_path=SAVE_PATH):
 
 def test(save_path=SAVE_PATH):
     print("Initializing Tester...")
-    tester = Tester(MODEL)
+    tester = Tester()
 
     print("Running inference on test images")
     os.system(f"python3 detect.py --weights {WEIGHTS_PATH} --source {IMAGES_PATH} --max-det 1 --device 0 --save-txt --nosave")
