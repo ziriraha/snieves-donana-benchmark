@@ -15,20 +15,20 @@ def get_xml_annotation(txt, size_x, size_y, classes=CLASSES):
             int(float(txt[3])*size_x), 
             int(float(txt[4])*size_y)]
     return f"""<annotation>
-            <object>
-                    <name>{classes[cls]}</name>
-                    <pose>Unspecified</pose>
-                    <truncated>0</truncated>
-                    <difficult>0</difficult>
-                    <occluded>0</occluded>
-                    <bndbox>
-                            <xmin>{bbox[0] - bbox[2]//2}</xmin>
-                            <xmax>{bbox[0] + bbox[2]//2}</xmax>
-                            <ymin>{bbox[1] - bbox[3]//2}</ymin>
-                            <ymax>{bbox[1] + bbox[3]//2}</ymax>
-                    </bndbox>
-            </object>
-    </annotation>"""
+    <object>
+        <name>{classes[cls]}</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
+        <occluded>0</occluded>
+        <bndbox>
+            <xmin>{bbox[0] - bbox[2]//2}</xmin>
+            <xmax>{bbox[0] + bbox[2]//2}</xmax>
+            <ymin>{bbox[1] - bbox[3]//2}</ymin>
+            <ymax>{bbox[1] + bbox[3]//2}</ymax>
+        </bndbox>
+    </object>
+</annotation>"""
 
 def main(dataset, splits=SPLITS, folder_name=XML_NAME):
     for split in splits:
