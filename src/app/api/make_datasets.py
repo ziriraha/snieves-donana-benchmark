@@ -1,4 +1,3 @@
-from app.utils.constants import CUSTOM_DIRECTORY, DATASET_NAMES, CSV_DIRECTORY, ZIP_DIRECTORY
 from utils import download_images
 import os
 import pandas as pd

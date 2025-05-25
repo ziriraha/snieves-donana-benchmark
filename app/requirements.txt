@@ -1,6 +1,0 @@
-pandas
-megadetector
-Flask
-minio
-yolov5
-python-dotenv

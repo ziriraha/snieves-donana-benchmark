@@ -1,0 +1,44 @@
+services:
+  app:
+    container_name: app
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+  db:
+    container_name: db
+    image: postgres
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  celery:
+    container_name: celery
+    build: .
+    env_file:
+      - .env
+    command: celery -A make_celery worker --loglevel INFO
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - app
+
+  redis:
+    container_name: redis
+    image: redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+    driver: local

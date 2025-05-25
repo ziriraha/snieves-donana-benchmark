@@ -14,7 +14,6 @@ mi_client = Minio(
         MINIO_URL,
         access_key=MINIO_ACCESS_KEY,
         secret_key=MINIO_SECRET_KEY,
-        secure=False,
     )
 
 def get_image_from_minio(image: Path, path_to_save: Path):

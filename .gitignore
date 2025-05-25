@@ -46,3 +46,7 @@ Temporary Items
 
 ## Dataset
 *.csv
+
+instance/
+__pycache__/
+*.log

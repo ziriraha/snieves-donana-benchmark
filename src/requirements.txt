@@ -1,0 +1,9 @@
+pandas
+megadetector
+Flask
+minio
+yolov5
+Flask-SQLAlchemy
+psycopg2-binary
+celery
+redis
