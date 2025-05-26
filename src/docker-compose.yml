@@ -8,6 +8,7 @@ services:
       - "4000:4000"
     volumes:
       - .:/app
+      # - api_data:/app/api_data
     depends_on:
       - db
 
@@ -27,6 +28,7 @@ services:
     command: celery -A make_celery worker --loglevel INFO
     volumes:
       - .:/app
+      # - api_data:/app/api_data
     depends_on:
       - redis
       - app
@@ -38,3 +40,9 @@ services:
 volumes:
   postgres_data:
     driver: local
+  api_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/api_data
+      o: bind

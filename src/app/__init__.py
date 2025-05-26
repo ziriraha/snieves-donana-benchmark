@@ -1,7 +1,7 @@
 from flask import Flask
 import logging
 
-from .extensions import db, celery_init_app
+from .extensions import db, celery_init_app, initialize_minio_client
 from .views import views_bp
 
 def setup_logging():
@@ -9,12 +9,14 @@ def setup_logging():
         level=logging.INFO,
         format='[%(asctime)s] %(levelname)s - %(name)s: %(message)s',
         handlers=[
-            logging.FileHandler('app.log'),
+            # logging.FileHandler('app.log'),
             logging.StreamHandler()
         ]
     )
 
 def create_app():
+    setup_logging()
+
     app = Flask(__name__)
     app.config.from_pyfile('config.py')
 
@@ -23,6 +25,7 @@ def create_app():
         db.create_all()
         
     celery_init_app(app)
+    initialize_minio_client(app)
 
     # app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(views_bp, url_prefix='/')

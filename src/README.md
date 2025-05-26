@@ -1,17 +1,14 @@
 # How to run the API
-Create a `.env` file with the following variables:
+Create a `.env` file with the following variables (see example.env):
 - MINIO_URL
 - MINIO_ACCESS_KEY
 - MINIO_SECRET_KEY
 - MINIO_BUCKET
 
-To run the app execute the following commands in the `backend` directory:
+To run the app execute the following command in the `src` directory with docker and docker-compose installed:
 ```bash
-pip install -r requirements.txt
-git clone https://github.com/ultralytics/yolov5
-python app.py
+docker-compose up --buiild -d
 ``` 
-It is recommended to create a virtual enviroment.
 
 # Files needed
 The `train.csv`, `test.csv` and `val.csv` files in the csv/ folder will be needed to create the initial dataset zips. Also the `full.csv` file will be needed to fulfill user requests.
