@@ -1,6 +1,4 @@
 import os
-import sys
-import threading
 import argparse
 import concurrent.futures
 from datetime import datetime
@@ -8,10 +6,11 @@ from io import BytesIO
 
 import pandas as pd
 from PIL import Image
+from tqdm import tqdm
 
 from image_downloader import Downloader
 
-MAX_THREADS = min(64, 5 * (os.cpu_count() or 4))
+MAX_THREADS = min(64, 4 * (os.cpu_count() or 4))
 SAVE_PATH = './output.csv'
 
 def get_datetime_for_image(image_path):
@@ -37,34 +36,20 @@ def get_datetime_for_image(image_path):
 
 def main(dataframe, output=SAVE_PATH):
     print(f"Processing images in parallel with {MAX_THREADS} threads...")
-    total = len(dataframe); progress = [0]
 
-    def update_progress():
-        while progress[0] < total:
-            percent = (progress[0] / total) * 100
-            sys.stdout.write(f"\rProgress: {percent:.2f}%")
-            sys.stdout.flush()
-            if progress[0] >= total: break
+    with tqdm(total=len(dataframe), desc="Processing images", unit="images") as progress_bar:
+        def get_datetime_for_row(row):
+            row['date'] = get_datetime_for_image(row.path)
+            progress_bar.update(1)
+            return row
 
-    progress_thread = threading.Thread(target=update_progress)
-    progress_thread.start()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+            rows = list(executor.map(get_datetime_for_row, [row for _, row in dataframe.iterrows()]))
 
-    def get_datetime_for_row(row):
-        row['date'] = get_datetime_for_image(row.path)
-        progress[0] += 1
-        return row
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-        rows = list(executor.map(get_datetime_for_row, [row for _, row in dataframe.iterrows()]))
-
-    progress[0] = total
-    progress_thread.join()
-    sys.stdout.write("\rProgress: 100.00%\n")
-    sys.stdout.flush()
-
+    print("All images processed. Compiling results...")
     dataframe = pd.DataFrame(rows)
-    print(f"Done!\nWriting output to file {output}")
     dataframe.to_csv(output, index=False)
+    print(f"Output saved to {output}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract datetime from images in a CSV file.")
