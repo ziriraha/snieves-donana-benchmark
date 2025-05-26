@@ -8,7 +8,7 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
-from image_downloader import Downloader
+from .downloader import Downloader
 
 MAX_THREADS = min(64, 4 * (os.cpu_count() or 4))
 SAVE_PATH = './output.csv'

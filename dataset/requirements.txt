@@ -1,7 +1,7 @@
 pillow
 pandas
 numpy
-megadetector
+megadetector==5.0.7
 ipykernel
 minio
 matplotlib

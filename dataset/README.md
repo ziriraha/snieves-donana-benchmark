@@ -1,5 +1,6 @@
 # Dataset
 In this directory there will be files for the analysis and processing of the dataset and the creation of the traininig split.
+The scripts were tested and written for Python 3.9.6.
 
 The `confi_dataset.yaml` and `dataset.yaml` files are the ones needed by the models to function.
 
@@ -49,7 +50,8 @@ The `confi_dataset.yaml` and `dataset.yaml` files are the ones needed by the mod
 ## CSVs
 In the releases section of the repository are all the csvs of the project:
 - `raw`: all the images provided.
-- `full`: only the images from the species we are interested in. Also contains date and time information of the image. Discards non existant image paths too.
+- `full`: all the images with datetime information.
+- `full-interested`: Only the images we are interested in.
 - `clean`: images taken in the same minute are all discarded but one. The goal is to remove duplicate images.
 - `train`, `val`, `test`: splits for the training dataset.
 
@@ -57,6 +59,9 @@ In the releases section of the repository are all the csvs of the project:
 The `raw.csv` was the dataset provided. First, some species were excluded and the timestamp (`get_datetime.py`) of the images was added to generate `full.csv`. The `clear_bursts.py` script was used to remove images from the same burst (this was done to remove duplicates), the result is the `clean.csv`. Finally, the `dataset_splitter.py` script was run to generate the `train.csv`, `val.csv`, `test.csv`.
 
 ### Special Datasets
-The dataset downloader may download the data in the following directory structure: `dataset/split/park/species/images|labels/image.jpg|txt` to convert from this to a compatible format for the models (`dataset/split/images|labels/image.jpg|txt`) use the `change_shape.py` script.
+The dataset downloaded via the API may download the data in the following directory structure: `dataset/split/park/species/images|labels/image.jpg|txt` to convert from this to a compatible format for the models (`dataset/split/images|labels/image.jpg|txt`) use the `change_shape.py` script.
 
 FasterRCNN expects xml files instead of .txt. For this, the `add_xml_annotation.py` script can be used on a dataset directory with `images` and `labels` folder to create a `xml_labels` folder.
+
+## Downloading the dataset
+The `downloader.py` script needs a .env with Minio access information, similar to the one needed for the app. Make sure to have the yolov5 repository in the same directory and to set PYTHONPATH to the working directory and to the yolov5 directory. This is needed for Megadetector.
