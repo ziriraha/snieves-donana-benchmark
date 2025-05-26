@@ -3,8 +3,7 @@ TRAIN_DIR_LABELS: /home/usuario/Documentos/ziri/dataset/train/xml_labels
 VALID_DIR_IMAGES: /home/usuario/Documentos/ziri/dataset/val/images
 VALID_DIR_LABELS: /home/usuario/Documentos/ziri/dataset/val/xml_labels
 
-CLASSES: ['_background_', 'mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
-
+CLASSES: ['_background_', 'bos', 'caae', 'caca', 'can', 'capi', 'cer', 'dam', 'equ', 'fel', 'fsi', 'gen', 'her', 'lep', 'lut', 'lyn', 'mafo', 'mel', 'mus', 'ory', 'ovar', 'ovor', 'rara', 'sus', 'vul']
 # Number of classes (object classes + 1 for background class in Faster RCNN).
 NC: 25
 

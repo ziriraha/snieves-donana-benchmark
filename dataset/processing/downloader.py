@@ -23,7 +23,7 @@ MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY')
 
 class Downloader:
     MINIO_CLIENT = Minio(MINIO_URL, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=False)
-    CLASSES = sorted(['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca'])
+    CLASSES = ['bos', 'caae', 'caca', 'can', 'capi', 'cer', 'dam', 'equ', 'fel', 'fsi', 'gen', 'her', 'lep', 'lut', 'lyn', 'mafo', 'mel', 'mus', 'ory', 'ovar', 'ovor', 'rara', 'sus', 'vul']
     MULTIPROCESSING_CONTEXT = mp.get_context("spawn")
 
     def __init__(self, download_path = 'dataset/', detection = True):

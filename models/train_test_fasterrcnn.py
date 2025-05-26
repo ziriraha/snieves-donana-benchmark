@@ -11,7 +11,7 @@ WEIGHTS_PATH = "fastercnn/outputs/training/res_1/best_model.pth"
 SAVE_PATH = "./"
 RUN_PATH = "fastercnn/outputs/inference/res_1/boxes.csv"
 
-CLASSES = ['_background_', 'mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
+CLASSES = ['_background_', 'bos', 'caae', 'caca', 'can', 'capi', 'cer', 'dam', 'equ', 'fel', 'fsi', 'gen', 'her', 'lep', 'lut', 'lyn', 'mafo', 'mel', 'mus', 'ory', 'ovar', 'ovor', 'rara', 'sus', 'vul']
 
 def prepare():
     prepare_environment(MODEL)
