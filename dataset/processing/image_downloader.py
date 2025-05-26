@@ -1,6 +1,10 @@
 import os
 import shutil
 import uuid
+import concurrent.futures
+import queue
+from tqdm import tqdm
+import pandas as pd  # Assuming DataFrame is used
 
 from dotenv import load_dotenv
 from megadetector.detection import run_detector
@@ -46,35 +50,45 @@ class Downloader:
         pred = self.MODEL.generate_detections_one_image(image)['detections'][-1]['bbox']
         return f'{pred[0] + pred[2]/2} {pred[1] + pred[3]/2} {pred[2]} {pred[3]}'
 
-    def get_image(self, object_path, save_path, species):
-        filename = str(uuid.uuid4())
-        image_path = os.path.join(save_path, f'{filename}.jpg')
-        label_path = os.path.join(save_path, f'{filename}.txt')
-        
+    def process_image(self, image_path, label_path, species):
         try:
-            self.download_image_from_minio(object_path, image_path)
             image = vis_utils.load_image(image_path)
             image.save(image_path, format='JPEG', quality=100)
 
             if self.detection and species != "emp":
                 with open(label_path, 'w') as file:
                     file.write(f'{self.CLASSES.index(species)} {self.get_bbox(image)}')
+        except Exception as err:
+            raise RuntimeError(f"Error processing image: {err}")
+
+    def get_image(self, object_path, save_path, species):
+        filename = str(uuid.uuid4())
+        image_path = os.path.join(save_path, f'{filename}.jpg')
+        label_path = os.path.join(save_path, f'{filename}.txt')
+
+        try:
+            self.download_image_from_minio(object_path, image_path)
+            self.process_image(image_path, label_path, species)
 
         except Exception as err:
             self.errors[object_path] = str(err)
-            if os.path.exists(image_path):
-                os.remove(image_path)
-            if os.path.exists(label_path):
-                os.remove(label_path)
-    
+            if os.path.exists(image_path): os.remove(image_path)
+            if os.path.exists(label_path): os.remove(label_path)
+
     def download_images(self, df, folder):
         save_directory = os.path.join(self.download_path, folder)
 
-        for _, row in df.reset_index(drop=True).iterrows():
+        total_images = len(df)
+        progress_bar = tqdm(total=total_images, desc="Downloading Images", unit="image")
+
+        for _, row in df.iterrows():
             save_path = os.path.join(save_directory, row['park'], row['species'])
             os.makedirs(save_path, exist_ok=True)
             self.get_image(row['path'], save_path, row['species'])
-    
+            progress_bar.update(1)
+            
+        progress_bar.close()
+
     def clear_download_path(self, folder=""):
         path = os.path.join(self.download_path, folder)
         shutil.rmtree(path, ignore_errors=True)
