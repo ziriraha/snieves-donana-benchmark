@@ -9,5 +9,10 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 
 COPY . .
 
+# For megadetector
+RUN git clone https://github.com/ultralytics/yolov5 && \
+    pip install --no-cache-dir -r yolov5/requirements.txt
+ENV PYTHONPATH="${PYTHONPATH}:/app:/app/yolov5"
+
 EXPOSE 4000
 CMD ["flask", "run", "--host=0.0.0.0", "--port=4000", "--debug"]

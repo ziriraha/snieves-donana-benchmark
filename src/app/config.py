@@ -17,10 +17,14 @@ SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 REDIS_URL = os.environ.get('REDIS_URL')
+REDIS_CELERY_URL = REDIS_URL + '/0'
+REDIS_APP_URL = REDIS_URL + '/1'
+
 CELERY = {
-    'broker_url': REDIS_URL,
-    'result_backend': REDIS_URL,
+    'broker_url': REDIS_CELERY_URL,
+    'result_backend': REDIS_CELERY_URL,
 }
+MAX_CELERY_THREADS = (os.cpu_count() or 4) * 2
 
 MINIO_URL = os.environ.get('MINIO_URL')
 MINIO_BUCKET = os.environ.get('MINIO_BUCKET')
