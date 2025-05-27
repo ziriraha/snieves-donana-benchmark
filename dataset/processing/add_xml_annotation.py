@@ -2,8 +2,9 @@ import os
 import argparse
 
 import PIL.Image as Image
+from tqdm import tqdm
 
-CLASSES = ['mus', 'rara', 'ory', 'fsi', 'lyn', 'lut', 'sus', 'mel', 'vul', 'lep', 'equ', 'cer', 'bos', 'gen', 'her', 'dam', 'fel', 'can', 'ovar', 'mafo', 'capi', 'caae', 'ovor', 'caca']
+CLASSES = ['bos', 'caae', 'caca', 'can', 'capi', 'cer', 'dam', 'equ', 'fel', 'fsi', 'gen', 'her', 'lep', 'lut', 'lyn', 'mafo', 'mel', 'mus', 'ory', 'ovar', 'ovor', 'rara', 'sus', 'vul']
 SPLITS = ['train', 'val']
 XML_NAME = 'xml_labels'
 
@@ -38,18 +39,17 @@ def main(dataset, splits=SPLITS, folder_name=XML_NAME):
 
         os.makedirs(xml_labels_dir, exist_ok=True)
 
-        for img in os.listdir(images_dir):
-            if not img.endswith(".jpg"): continue
+        for label in tqdm(os.listdir(labels_dir), desc=f"Processing {split} labels", unit="labels"):
+            if not label.endswith(".txt"): continue
+            img_name = ''.join(label.split(".")[:-1])
 
-            with Image.open(os.path.join(images_dir, img)) as image:
+            with Image.open(os.path.join(images_dir, f'{img_name}.jpg')) as image:
                 size_x, size_y = image.size
 
-            img_name = img.split(".")[:-1]
-            label_path = os.path.join(labels_dir, f'{img_name}.txt')
-            if os.path.exists(label_path):
-                with open(label_path, "r") as f: txt = f.read()
-                with open(os.path.join(xml_labels_dir, f'{img_name}.xml'), "w") as f:
-                    f.write(get_xml_annotation(txt, size_x, size_y))
+            label_path = os.path.join(labels_dir, label)
+            with open(label_path, "r") as file: txt = file.read()
+            with open(os.path.join(xml_labels_dir, f'{img_name}.xml'), "w") as file:
+                file.write(get_xml_annotation(txt, size_x, size_y))
 
 
 if __name__ == "__main__":

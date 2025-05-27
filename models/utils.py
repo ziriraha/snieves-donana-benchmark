@@ -1,5 +1,7 @@
 import os
 
+from tqdm import tqdm
+
 DATASET_YAML = '/home/usuario/Documentos/ziri/dataset/dataset.yaml'
 CONFI_DATASET_YAML = '/home/usuario/Documentos/ziri/dataset/confi_dataset.yaml'
 TEST_PATH = '/home/usuario/Documentos/ziri/dataset/test'
@@ -20,7 +22,7 @@ class Tester:
         self.iou = []
 
     def run(self, get_pred):
-        for img in os.listdir(IMAGES_PATH):
+        for img in tqdm(os.listdir(IMAGES_PATH), desc="Testing images", unit="image"):
             if not img.endswith('.jpg'): continue
             img_name = img.split('.')[0]
             rcls, rbbox = self.get_real(img_name)

@@ -10,7 +10,7 @@ SAVE_PATH = './'
 
 def prepare():
     print("Downloading YOLOv8...")
-    return YOLO('yolov8s')
+    return YOLO('yolov8s.pt')
 
 def train(model, save_path=SAVE_PATH):
     print('Training model...')
