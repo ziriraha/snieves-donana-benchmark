@@ -34,7 +34,7 @@ def test(save_path=SAVE_PATH):
     tester = Tester()
 
     print("Running inference on test images")
-    os.system(f"python3 detect.py --weights {WEIGHTS_PATH} --source {IMAGES_PATH} --max-det 1 --device 0 --save-txt --nosave")
+    os.system(f"python3 yolov5/detect.py --weights {WEIGHTS_PATH} --source {IMAGES_PATH} --max-det 1 --device 0 --save-txt --nosave")
 
     def get_pred(img_name):
         label = os.path.join(RUN_PATH, f'{img_name}.txt')
