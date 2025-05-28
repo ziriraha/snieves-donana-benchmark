@@ -3,7 +3,7 @@ import argparse
 
 from ultralytics import YOLO
 
-from utils import Tester, prepare_environment, DATASET_YAML
+from utils import Tester, prepare_environment, DATASET_YAML, IMAGES_PATH
 
 MODEL = 'yolo'
 SAVE_PATH = './'
@@ -28,7 +28,7 @@ def test(model, save_path=SAVE_PATH):
     print("Importing model...")
     def get_pred(img_name):
         pcls, pbbox = -1, None
-        img_path = os.path.join(tester.images_folder, f'{img_name}.jpg')
+        img_path = os.path.join(IMAGES_PATH, f'{img_name}.jpg')
         for result in model(img_path):
             if len(result.boxes) != 0:
                 pcls = int(result.boxes.cls[0].item())
