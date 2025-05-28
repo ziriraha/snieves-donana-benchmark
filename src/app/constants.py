@@ -1,0 +1,5 @@
+ERROR_DATE_FORMAT = 'Incorrect date format.'
+ERROR_LIMIT_FORMAT = 'Incorrect limit format.'
+ERROR_PARK_NOT_FOUND = 'Park not found'
+ERROR_SPECIES_NOT_FOUND = 'Species not found'
+ERROR_NO_IMAGES_FOUND = 'No images found for the specified filters.'

@@ -3,6 +3,8 @@ from flask import current_app as app
 from .models import Image, Park, Species
 import pandas as pd
 from celery import shared_task
+import tempfile
+import shutil
 import os
 import logging
 import json
@@ -78,21 +80,21 @@ def download_image(image, image_path, label_path):
             return (image.id, False)
     return (image.id, True)
     
-@shared_task(bind=True)
-def download_images(self, images, destination):
-    job_id = self.request.id
-    progress = {'Done': False, 'success': 0, 'failed': 0, 'total': len(images)}
+@shared_task()
+def download_images(job_id, images, destination):
+    progress = {'downloaded': 0, 'failed': 0, 'total': len(images), 'status': 'Downloading'}
     redis_client.set(f"progress:{job_id}", json.dumps(progress))
 
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=app.config['MAX_CELERY_THREADS']) as executor:
         futures = []
         for image in images:
-            save_path = os.path.join(destination, image.park.name, image.species.name)
+            save_path = os.path.join(destination, image.park.code, image.species.code)
             os.makedirs(save_path, exist_ok=True)
 
-            image_path = os.path.join(save_path, f'{image.id}.jpg')
-            label_path = os.path.join(save_path, f'{image.id}.txt')
+            filename = str(image.id)
+            image_path = os.path.join(save_path, f'{filename}.jpg')
+            label_path = os.path.join(save_path, f'{filename}.txt')
 
             futures.append(executor.submit(download_image, image, image_path, label_path))
 
@@ -101,10 +103,33 @@ def download_images(self, images, destination):
             redis_client.set(f"progress:{job_id}", json.dumps(progress))
             results.append(future.result())
 
-    progress['Done'] = True
     redis_client.set(f"progress:{job_id}", json.dumps(progress))
     logger.info(f"Download task {job_id} completed with {progress['success']} successes and {progress['failed']} failures.")
     return {
         'success': [image_id for image_id, success in results if success],
         'failed': [image_id for image_id, success in results if not success],
     }
+
+@shared_task(bind=True)
+def generate_zip(self, images):
+    job_id = self.request.id
+    output_zip_file = None
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            result = download_images(job_id, images, temp_dir)
+
+            result['status'] = 'Zipping'
+            redis_client.set(f"progress:{job_id}", json.dumps(result))
+
+            archive_file = os.path.join(app.config['API_DATA_DIR'],  f"dataset_{job_id}")
+            output_zip_file = shutil.make_archive(archive_file, 'zip', temp_dir)
+            
+            result['status'] = 'Completed'
+            redis_client.set(f"progress:{job_id}", json.dumps(result))
+    except Exception as e:
+        logger.error(f"Error generating zip file for job {job_id}: {e}")
+        if output_zip_file and os.path.exists(output_zip_file): os.remove(output_zip_file)
+        redis_client.delete(f"progress:{job_id}")
+        return {'error': str(e)}
+
+    return {'file': output_zip_file}

@@ -9,6 +9,21 @@ logger = logging.getLogger(__name__)
 class DetectionError(Exception):
     pass
 
+def verify_date(date_str):
+    from datetime import datetime
+    try:
+        datetime.strptime(date_str, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
+    
+def verify_num_files(limit_str):
+    try:
+        limit = int(limit_str)
+        return limit > 0
+    except (ValueError, TypeError):
+        return False
+
 def get_image_from_minio(object_path):
     return minio_client.get_object(
         bucket_name=app.config['MINIO_BUCKET'], 
