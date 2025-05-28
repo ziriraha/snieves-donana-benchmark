@@ -11,6 +11,7 @@ services:
       # - api_data:/app/api_data
     depends_on:
       - db
+      - celery
 
   db:
     container_name: db

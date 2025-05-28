@@ -6,53 +6,51 @@ from celery import shared_task
 import os
 import logging
 import json
+import zipfile
 import concurrent.futures
 logger = logging.getLogger(__name__)
 
 from .utils import download_image_from_minio, generate_annotation
 
-# TODO: Should add a species.csv and a parks.csv file to the import for the full names
+# from app.tasks import import_data_from_zip; import_data_from_zip.delay(app.config['DATA_ZIP_PATH'])
 @shared_task
-def import_csv_data(file_path):
-    try:
-        df = pd.read_csv(file_path)
-        parks = {}
-        for park in df['park'].unique():
-            park_obj = Park.query.filter_by(name=park).first()
-            if not park_obj:
-                park_obj = Park(name=park)
-                db.session.add(park_obj)
-                db.session.commit()
-            parks[park] = park_obj
+def import_data_from_zip(file_path):
+    species, parks, images = None, None, None
 
-        species = {}
-        for species_name in df['species'].unique():
-            species_obj = Species.query.filter_by(name=species_name).first()
-            if not species_obj:
-                species_obj = Species(name=species_name)
-                db.session.add(species_obj)
-                db.session.commit()
-            species[species_name] = species_obj
+    with zipfile.ZipFile(file_path, 'r') as file:
+        species = pd.read_csv(file.open('species.csv'))
+        parks = pd.read_csv(file.open('parks.csv'))
+        images = pd.read_csv(file.open('images.csv'))
 
-        for _, row in df.iterrows():
-            image_exists = Image.query.filter_by(path=row['path']).first()
-            if image_exists: continue
+    existing_species = {code for (code,) in Species.query.with_entities(Species.code).all()}
+    created_species = set()
+    for _, row in species.iterrows():
+        if row['code'] in existing_species: continue
+        created_species.add(Species(code=row['code'], scientific_name=row['scientific'], name=row['name']))
+    db.session.bulk_save_objects(created_species)
+    db.session.commit()
 
-            dt = pd.to_datetime(row['date'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
-            dt = None if pd.isna(dt) else dt
+    existing_parks = {code for (code,) in Park.query.with_entities(Park.code).all()}
+    created_parks = set()
+    for _, row in parks.iterrows():
+        if row['code'] in existing_parks: continue
+        created_parks.add(Park(code=row['code'], name=row['name']))
+    db.session.bulk_save_objects(created_parks)
+    db.session.commit()
 
-            image = Image(
-                path=row['path'],
-                date=dt,
-                species=species[row['species']],
-                park=parks[row['park']]
-            )
-            db.session.add(image)
-            db.session.commit()
+    existing_images = {path for (path,) in Image.query.with_entities(Image.path).all()}
+    parks_dict = {p.code: p.id for p in Park.query.all()}
+    species_dict = {s.code: s.id for s in Species.query.all()}
+    created_images = set()
+    for _, row in images.iterrows():
+        if row['path'] in existing_images: continue
+        dt = pd.to_datetime(row['date'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
+        dt = None if pd.isna(dt) else dt
+        created_images.add(Image(path=row['path'], date=dt, species_id=species_dict[row['species']], park_id=parks_dict[row['park']]))
+    db.session.bulk_save_objects(created_images)
+    db.session.commit()
 
-        return "Data imported successfully"
-    except Exception as err:
-        return f"Error importing data: {str(err)}"
+    return "Data imported successfully"
 
 @shared_task
 def annotation_task_wrapper(image_object, image, label_path):
@@ -65,7 +63,7 @@ def download_image(image, image_path, label_path):
         if os.path.exists(image_path): os.remove(image_path)
         return (image.id, False)
 
-    if image.species.name != 'emp':
+    if image.species.code != 'emp':
         detection_result = True
         try:
             detection_task = annotation_task_wrapper.delay(image_object, image, label_path)

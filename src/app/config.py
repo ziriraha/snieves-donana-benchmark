@@ -13,10 +13,12 @@ import os
 #     'no_data': 'No images found for the specified parameters'
 # 
 
+DATA_ZIP_PATH = './csv/archive.zip'
+
 SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-REDIS_URL = os.environ.get('REDIS_URL')
+REDIS_URL = os.getenv('REDIS_URL')
 REDIS_CELERY_URL = REDIS_URL + '/0'
 REDIS_APP_URL = REDIS_URL + '/1'
 
@@ -26,10 +28,12 @@ CELERY = {
 }
 MAX_CELERY_THREADS = (os.cpu_count() or 4) * 2
 
-MINIO_URL = os.environ.get('MINIO_URL')
-MINIO_BUCKET = os.environ.get('MINIO_BUCKET')
-MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY')
-MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY')
+API_DATA_DIR = os.getenv('API_DATA_DIR')
+
+MINIO_URL = os.getenv('MINIO_URL')
+MINIO_BUCKET = os.getenv('MINIO_BUCKET')
+MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY')
+MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY')
 
 MAX_REQUEST_ROWS = 10000
 

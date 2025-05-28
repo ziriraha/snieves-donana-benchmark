@@ -1,24 +1,25 @@
 from . import db
+import uuid
 
 class Park(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
-    full_name = db.Column(db.String)
+    code = db.Column(db.String, nullable=False, unique=True)
+    name = db.Column(db.String)
 
     def __repr__(self):
-        return f'<Park {self.name}>'
+        return f'<Park {self.code}>'
 
 class Species(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
+    code = db.Column(db.String, nullable=False, unique=True)
     scientific_name = db.Column(db.String)
-    common_name = db.Column(db.String)
+    name = db.Column(db.String)
 
     def __repr__(self):
-        return f'<Species {self.name}>'
+        return f'<Species {self.code}>'
 
 class Image(db.Model):
-    id = db.Column(db.UUID, primary_key=True)
+    id = db.Column(db.UUID, primary_key=True, default=uuid.uuid4)
     path = db.Column(db.Text, nullable=False, unique=True)
     date = db.Column(db.DateTime)
     bbox = db.Column(db.JSON)
