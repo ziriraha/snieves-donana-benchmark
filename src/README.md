@@ -7,8 +7,17 @@ Create a `.env` file with the following variables (see example.env):
 
 To run the app execute the following command in the `src` directory with docker and docker-compose installed:
 ```bash
-docker-compose up --buiild -d
-``` 
+docker-compose up --build -d
+```
+
+To populate the database, open a shell in the flask app container, then run:
+```bash
+flask shell
+```
+```python
+from app.tasks import import_data_from_zip; import_data_from_zip.delay(app.config['DATA_ZIP_PATH'])
+```
+This will run the data importation task, it may take up to 5 minutes for the data to appear on the database.
 
 # Files needed
 The `train.csv`, `test.csv` and `val.csv` files in the csv/ folder will be needed to create the initial dataset zips. Also the `full.csv` file will be needed to fulfill user requests.
