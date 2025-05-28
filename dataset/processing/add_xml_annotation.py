@@ -39,17 +39,21 @@ def main(dataset, splits=SPLITS, folder_name=XML_NAME):
 
         os.makedirs(xml_labels_dir, exist_ok=True)
 
-        for label in tqdm(os.listdir(labels_dir), desc=f"Processing {split} labels", unit="labels"):
-            if not label.endswith(".txt"): continue
-            img_name = ''.join(label.split(".")[:-1])
+        for image_file in tqdm(os.listdir(images_dir), desc=f"Processing {split} labels", unit="labels"):
+            if not image_file.endswith(".jpg"): continue
+            img_name = ''.join(image_file.split(".")[:-1])
 
-            with Image.open(os.path.join(images_dir, f'{img_name}.jpg')) as image:
-                size_x, size_y = image.size
+            annotation = "<annotation>\n</annotation>"
 
-            label_path = os.path.join(labels_dir, label)
-            with open(label_path, "r") as file: txt = file.read()
+            label_path = os.path.join(labels_dir, f'{img_name}.txt')
+            if os.path.exists(label_path):
+                with Image.open(os.path.join(images_dir, f'{img_name}.jpg')) as image:
+                    size_x, size_y = image.size
+                with open(label_path, "r") as file: txt = file.read()
+                annotation = get_xml_annotation(txt, size_x, size_y)
+
             with open(os.path.join(xml_labels_dir, f'{img_name}.xml'), "w") as file:
-                file.write(get_xml_annotation(txt, size_x, size_y))
+                file.write(annotation)
 
 
 if __name__ == "__main__":
