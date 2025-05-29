@@ -28,7 +28,7 @@ services:
     build: .
     env_file:
       - .env
-    command: celery -A make_celery worker --loglevel INFO --concurrency
+    command: celery -A make_celery worker --loglevel INFO
     volumes:
       - .:/app
       # - api_data:/app/api_data
