@@ -20,19 +20,20 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   celery:
     container_name: celery
     build: .
     env_file:
       - .env
-    command: celery -A make_celery worker --loglevel INFO
+    command: celery -A make_celery worker --loglevel INFO --concurrency
     volumes:
       - .:/app
       # - api_data:/app/api_data
     depends_on:
       - redis
-      - app
 
   redis:
     container_name: redis

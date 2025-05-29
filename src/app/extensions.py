@@ -1,8 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
 from celery import Celery, Task
-from minio import Minio
+from flask_sqlalchemy import SQLAlchemy
 from megadetector.detection import run_detector
-import redis
+from .config import MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
+from minio import Minio
 
 db = SQLAlchemy()
 
@@ -19,14 +19,11 @@ def celery_init_app(app):
     app.extensions["celery"] = celery_app
     return celery_app
 
-minio_client = None
-def initialize_minio_client(app):
-    global minio_client
-    minio_client = Minio(
-        app.config['MINIO_URL'],
-        access_key=app.config['MINIO_ACCESS_KEY'],
-        secret_key=app.config['MINIO_SECRET_KEY']
-    )
+minio_client = Minio(MINIO_URL,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False
+)
 
 bbox_model = None
 def get_bbox_model():
@@ -41,8 +38,3 @@ def get_detection_model():
     if detection_model is None:
         pass # Load my model here
     return detection_model
-
-redis_client = None
-def initialize_redis_client(app):
-    global redis_client
-    redis_client = redis.Redis.from_url(app.config['REDIS_APP_URL'])

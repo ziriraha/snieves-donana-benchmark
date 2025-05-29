@@ -1,18 +1,19 @@
-from .extensions import db, redis_client
-from flask import current_app as app
-from .models import Image, Park, Species
-import pandas as pd
-from celery import shared_task
-import tempfile
-import shutil
-import os
-import logging
-import json
-import zipfile
 import concurrent.futures
-logger = logging.getLogger(__name__)
+import logging
+import os
+import shutil
+import tempfile
+import zipfile
 
+import pandas as pd
+from flask import current_app as app
+from celery import shared_task
+
+from .extensions import db
+from .models import Image, Park, Species
 from .utils import download_image_from_minio, generate_annotation
+
+logger = logging.getLogger(__name__)
 
 # from app.tasks import import_data_from_zip; import_data_from_zip.delay(app.config['DATA_ZIP_PATH'])
 @shared_task
@@ -55,81 +56,58 @@ def import_data_from_zip(file_path):
     return "Data imported successfully"
 
 @shared_task
-def annotation_task_wrapper(image_object, image, label_path):
-    return generate_annotation(image_object, image, label_path)
+def annotation_task_wrapper(image, image_path, label_path):
+    return generate_annotation(image, image_path, label_path)
 
 def download_image(image, image_path, label_path):
-    image_object = download_image_from_minio(image.path, image_path)
-    if not image_object:
-        logger.error(f"Failed to download image {image.path}")
+    new_bbox = None
+    try:
+        download_image_from_minio(image['path'], image_path)
+        if image['species']['code'] != 'emp':
+            annotation_job = annotation_task_wrapper.delay(image, image_path, label_path)
+            new_bbox = annotation_job.get(disable_sync_subtasks=False)
+    except Exception as e:
+        logger.error(f"Error downloading image {image['id']}: {str(e)}")
         if os.path.exists(image_path): os.remove(image_path)
-        return (image.id, False)
+        if os.path.exists(label_path): os.remove(label_path)
+    return image['id'], new_bbox
 
-    if image.species.code != 'emp':
-        detection_result = True
-        try:
-            detection_task = annotation_task_wrapper.delay(image_object, image, label_path)
-            detection_result = detection_task.get()
-        except Exception as e:
-            logger.error(f"Error during annotation task for image {image.id}: {str(e)}")
-            detection_result = False
-        if not detection_result:
-            logger.error(f"Annotation task failed for image {image.id}")
-            if os.path.exists(image_path): os.remove(image_path)
-            if os.path.exists(label_path): os.remove(label_path)
-            return (image.id, False)
-    return (image.id, True)
-    
-@shared_task()
-def download_images(job_id, images, destination):
-    progress = {'downloaded': 0, 'failed': 0, 'total': len(images), 'status': 'Downloading'}
-    redis_client.set(f"progress:{job_id}", json.dumps(progress))
-
-    results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=app.config['MAX_CELERY_THREADS']) as executor:
-        futures = []
+@shared_task
+def download_images(job, images, destination):
+    futures = []
+    job.update_state(state='PROGRESS', meta={'status': 'Downloading images...', 'progress': 0})
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         for image in images:
-            save_path = os.path.join(destination, image.park.code, image.species.code)
+            save_path = os.path.join(destination, image['park']['code'], image['species']['code'])
             os.makedirs(save_path, exist_ok=True)
 
-            filename = str(image.id)
+            filename = str(image['id'])
             image_path = os.path.join(save_path, f'{filename}.jpg')
             label_path = os.path.join(save_path, f'{filename}.txt')
 
             futures.append(executor.submit(download_image, image, image_path, label_path))
-
-        for future in concurrent.futures.as_completed(futures):
-            progress['success' if future.result()[1] else 'failed'] += 1
-            redis_client.set(f"progress:{job_id}", json.dumps(progress))
-            results.append(future.result())
-
-    redis_client.set(f"progress:{job_id}", json.dumps(progress))
-    logger.info(f"Download task {job_id} completed with {progress['success']} successes and {progress['failed']} failures.")
-    return {
-        'success': [image_id for image_id, success in results if success],
-        'failed': [image_id for image_id, success in results if not success],
-    }
+    progress = 0
+    total = len(futures)
+    for future in futures:
+        iid, bbox = future.result()
+        if bbox: 
+            img = Image.query.get(iid)
+            img.bbox = bbox
+        job.update_state(state='PROGRESS', meta={'status': 'Downloading images...', 'progress': progress / total * 100})
+    db.session.commit()
 
 @shared_task(bind=True)
 def generate_zip(self, images):
-    job_id = self.request.id
     output_zip_file = None
+    self.update_state(state='PROGRESS', meta={'status': 'Starting...', 'progress': 0})
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
-            result = download_images(job_id, images, temp_dir)
-
-            result['status'] = 'Zipping'
-            redis_client.set(f"progress:{job_id}", json.dumps(result))
-
-            archive_file = os.path.join(app.config['API_DATA_DIR'],  f"dataset_{job_id}")
+            download_images(self, images, temp_dir)
+            self.update_state(state='PROGRESS', meta={'status': 'Creating zip file...', 'progress': 100})
+            archive_file = os.path.join(app.config['API_DATA_DIR'],  str(self.request.id))
             output_zip_file = shutil.make_archive(archive_file, 'zip', temp_dir)
-            
-            result['status'] = 'Completed'
-            redis_client.set(f"progress:{job_id}", json.dumps(result))
     except Exception as e:
-        logger.error(f"Error generating zip file for job {job_id}: {e}")
-        if output_zip_file and os.path.exists(output_zip_file): os.remove(output_zip_file)
-        redis_client.delete(f"progress:{job_id}")
-        return {'error': str(e)}
-
-    return {'file': output_zip_file}
+        logger.error(f"Error generating zip file: {e}")
+        raise e
+    self.update_state(state='SUCCESS', meta={'status': 'Completed', 'progress': 100})
+    return output_zip_file

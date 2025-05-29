@@ -1,7 +1,7 @@
-from flask import Flask
 import logging
 
-from .extensions import db, celery_init_app, initialize_minio_client, initialize_redis_client
+from flask import Flask
+from .extensions import db, celery_init_app
 
 from .views import views_bp
 from .api import api_bp
@@ -27,8 +27,6 @@ def create_app():
         db.create_all()
         
     celery_init_app(app)
-    initialize_minio_client(app)
-    initialize_redis_client(app)
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(views_bp, url_prefix='/')
