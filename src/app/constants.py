@@ -4,5 +4,7 @@ ERROR_SPECIES_NOT_FOUND = 'Species not found'
 ERROR_NO_IMAGES_FOUND = 'No images found for the specified filters.'
 ERROR_GENERATE_ZIP = 'Failed to generate zip file'
 
+DATASETS = ['train', 'val', 'test']
+
 MAX_LIMIT = 10000
 DEFAULT_LIMIT = 1000

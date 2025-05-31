@@ -7,6 +7,12 @@ class Park(db.Model):
     code = db.Column(db.String, nullable=False, unique=True)
     name = db.Column(db.String)
 
+    def to_json(self):
+        return {
+            'code': self.code,
+            'name': self.name
+        }
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -22,6 +28,13 @@ class Species(db.Model):
     code = db.Column(db.String, nullable=False, unique=True)
     scientific_name = db.Column(db.String)
     name = db.Column(db.String)
+
+    def to_json(self):
+        return {
+            'code': self.code,
+            'scientific_name': self.scientific_name,
+            'name': self.name
+        }
 
     def to_dict(self):
         return {

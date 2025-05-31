@@ -1,7 +1,11 @@
 import logging
 
 from flask import Flask
+import click
+from flask.cli import with_appcontext
+
 from .extensions import db, celery_init_app
+from .tasks import import_data_from_zip, download_dataset_zips
 
 from .views import views_bp
 from .api import api_bp
@@ -15,6 +19,29 @@ def setup_logging():
             logging.StreamHandler()
         ]
     )
+
+@click.command('init-db')
+@with_appcontext
+def init_db_command():
+    """Populates db with default data. This action may take several minutes to complete."""
+    from flask import current_app as app
+    click.echo('Importing default data from zip...')
+    import_data_from_zip(app.config['DEFAULT_DATA_ZIP_PATH'])
+    click.echo('Default data imported successfully.')
+
+@click.command('download-datasets')
+@click.option('--background', is_flag=True, default=False, help='Run download in the background.')
+@with_appcontext
+def download_datasets_command(background):
+    """Download datasets to the configured API data directory. This action may take several hours to complete."""
+    from flask import current_app as app
+    click.echo('Downloading datasets...')
+    task = download_dataset_zips.delay(app.config['DEFAULT_DATA_ZIP_PATH'])
+    click.echo(f"Download started in the background with id {task.id}. You can check the status with Celery.")
+    if not background:
+        click.echo('Waiting for download to complete...')
+        task.get()
+        click.echo('Datasets downloaded successfully.')
 
 def create_app():
     setup_logging()
@@ -30,5 +57,7 @@ def create_app():
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(views_bp, url_prefix='/')
-    return app
 
+    app.cli.add_command(init_db_command)
+    app.cli.add_command(download_datasets_command)
+    return app

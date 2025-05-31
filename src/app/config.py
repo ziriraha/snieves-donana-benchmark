@@ -1,6 +1,6 @@
 import os
 
-DATA_ZIP_PATH = './csv/archive.zip'
+DEFAULT_DATA_ZIP_PATH = os.getenv('DEFAULT_DATA_ZIP_PATH', './db_data.zip')
 
 SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -14,11 +14,9 @@ CELERY = {
 }
 MAX_CELERY_THREADS = (os.cpu_count() or 4) * 2
 
-API_DATA_DIR = os.getenv('API_DATA_DIR', './api_data/')
+API_DATA_DIRECTORY = os.getenv('API_DATA_DIRECTORY', './data/')
 
 MINIO_URL = os.getenv('MINIO_URL')
 MINIO_BUCKET = os.getenv('MINIO_BUCKET')
 MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY')
 MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY')
-
-DATASET_DIRECTORY = './api_data/'

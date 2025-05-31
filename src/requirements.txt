@@ -1,9 +1,9 @@
 pandas
 megadetector
-Flask
+flask[async]
 minio
 yolov5
-Flask-SQLAlchemy
+flask-SQLAlchemy
 psycopg2-binary
 celery
 redis

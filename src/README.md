@@ -12,12 +12,15 @@ docker-compose up --build -d
 
 To populate the database, open a shell in the flask app container, then run:
 ```bash
-flask shell
-```
-```python
-from app.tasks import import_data_from_zip; import_data_from_zip.delay(app.config['DATA_ZIP_PATH'])
+flask init-db
 ```
 This will run the data importation task, it may take up to 5 minutes for the data to appear on the database.
+
+For generating the train, val and test dataset zip:
+```bash
+flask download-datasets
+```
+This will start a celery task to download the datasets, to view the progress take a look at the celery logs. This action may take several hours to complete. And 200 GBs of storage are needed.
 
 # Files needed
 The `train.csv`, `test.csv` and `val.csv` files in the csv/ folder will be needed to create the initial dataset zips. Also the `full.csv` file will be needed to fulfill user requests.
