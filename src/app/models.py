@@ -63,7 +63,7 @@ class Image(db.Model):
         return {
             'id': str(self.id),
             'date': self.date.isoformat() if self.date else None,
-            'bbox': self.bbox,
+            **({'bbox': self.bbox} if self.species.code != 'emp' else {}),
             'species': self.species.code,
             'park': self.park.code
         }

@@ -2,6 +2,7 @@ import os
 
 from celery.result import AsyncResult
 from flask import Blueprint, after_this_request, jsonify, request, send_file, current_app
+import json
 
 from .constants import (
     DEFAULT_LIMIT,
@@ -16,6 +17,7 @@ from .constants import (
 from .models import Image, Park, Species
 from .tasks import generate_zip
 from .utils import verify_date
+from .extensions import redis_client
 
 api_bp = Blueprint('api', __name__)
 
@@ -93,15 +95,22 @@ async def create_job():
 
     task = generate_zip.delay([img.to_dict() for img in images])
 
+    redis_client.set(f'status:{task.id}', json.dumps({
+        'status': 'Dispatched job... Waiting for it to start.',
+        'progress': 0,
+        'total': len(images)
+    }))
+
     return jsonify({'query_id': task.id}), 202
 
 @api_bp.route('/queries/<query_id>', methods=['GET'])
 async def get_job_status(query_id):
-    task = AsyncResult(query_id)
+    task = json.loads(redis_client.get(f'status:{query_id}'))
+    if not task: return jsonify({'error': 'Query information not found.'}), 404
     return jsonify({
-        'query_id': query_id,
-        'status': task.status,
-        'progress': task.info.get('progress', 0),
+        "query_id": query_id,
+        "status": task['status'],
+        "progress": round(task['progress'] / task['total'] * 100)
     }), 200
 
 @api_bp.route('/queries/<query_id>/download', methods=['GET'])
@@ -113,6 +122,7 @@ async def get_job_result(query_id):
     @after_this_request
     def remove_zip(response):
         os.remove(zip_file)
+        redis_client.delete(f'status:{query_id}')
         return response
 
     return send_file(zip_file, as_attachment=True, download_name=f'{query_id}.zip'), 200

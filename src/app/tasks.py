@@ -9,11 +9,13 @@ import pandas as pd
 from flask import current_app as app
 from tqdm import tqdm
 from celery import shared_task
+import json
 
-from .extensions import db
+from .extensions import db, redis_client
 from .constants import DATASETS
 from .models import Image, Park, Species
-from .utils import download_image_from_minio, generate_annotation
+from .utils import download_image_from_minio, calculate_bbox
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ def download_dataset_zips(file_path):
                     label_path = os.path.join(labels_path, f'{image.id}.txt')
                     futures.append(executor.submit(download_image, image.to_dict(), image_path, label_path))
 
-            for future in tqdm(futures, total=len(futures), desc=f'Downloading images for {set_name}'):
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=f'Downloading images for {set_name}'):
                 iid, bbox = future.result()
                 if bbox:
                     img = Image.query.get(iid)
@@ -91,26 +93,38 @@ def download_dataset_zips(file_path):
     
 
 @shared_task
-def annotation_task_wrapper(image, image_path, label_path):
-    return generate_annotation(image, image_path, label_path)
+def calculate_bbox_wrapper(base64_image):
+    bytes_image = base64.b64decode(base64_image.encode('utf-8'))
+    return calculate_bbox(bytes_image)
 
-def download_image(image, image_path, label_path):
+def download_image(job_id, image, image_path, label_path):
     new_bbox = None
     try:
-        download_image_from_minio(image['path'], image_path)
+        bytes_image = download_image_from_minio(image['path'], image_path)
         if image['species']['code'] != 'emp':
-            annotation_job = annotation_task_wrapper.delay(image, image_path, label_path)
-            new_bbox = annotation_job.get(disable_sync_subtasks=False)
+            if not image['bbox']:
+                base64_image = base64.b64encode(bytes_image).decode('utf-8')
+                new_bbox_task = calculate_bbox_wrapper.delay(base64_image)
+                new_bbox = new_bbox_task.get(disable_sync_subtasks=False)
+                image['bbox'] = new_bbox
+            with open(label_path, 'w') as file:
+                annotation_text = f"{image['species']['id']} {image['bbox']['x']} {image['bbox']['y']} {image['bbox']['width']} {image['bbox']['height']}"
+                file.write(annotation_text)
+
     except Exception as e:
         logger.error(f"Error downloading image {image['id']}: {str(e)}")
         if os.path.exists(image_path): os.remove(image_path)
         if os.path.exists(label_path): os.remove(label_path)
+
+    progress = json.loads(redis_client.get(f'status:{job_id}'))
+    progress['progress'] += 1
+    redis_client.set(f'status:{job_id}', json.dumps(progress))
     return image['id'], new_bbox
 
 @shared_task
-def download_images(job, images, destination):
+def download_images(job_id, images, destination):
     futures = []
-    job.update_state(state='PROGRESS', meta={'status': 'Downloading images...', 'progress': 0})
+    redis_client.set(f'status:{job_id}', json.dumps({'status': 'Downloading images...', 'progress': 0, 'total': len(images)}))
     with concurrent.futures.ThreadPoolExecutor(max_workers=app.config['MAX_CELERY_THREADS']) as executor:
         for image in images:
             save_path = os.path.join(destination, image['park']['code'], image['species']['code'])
@@ -120,29 +134,27 @@ def download_images(job, images, destination):
             image_path = os.path.join(save_path, f'{filename}.jpg')
             label_path = os.path.join(save_path, f'{filename}.txt')
 
-            futures.append(executor.submit(download_image, image, image_path, label_path))
-    progress = 0
-    total = len(futures)
-    for future in futures:
+            futures.append(executor.submit(download_image, job_id, image, image_path, label_path))
+    for future in concurrent.futures.as_completed(futures):
         iid, bbox = future.result()
         if bbox:
             img = Image.query.get(iid)
             img.bbox = bbox
-        job.update_state(state='PROGRESS', meta={'status': 'Downloading images...', 'progress': progress / total * 100})
     db.session.commit()
 
 @shared_task(bind=True)
 def generate_zip(self, images):
     output_zip_file = None
-    self.update_state(state='PROGRESS', meta={'status': 'Starting...', 'progress': 0})
+    job_id = self.request.id
+    redis_client.set(f'status:{job_id}', json.dumps({'status': 'Starting...', 'progress': 0, 'total': len(images)}))
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
-            download_images(self, images, temp_dir)
-            self.update_state(state='PROGRESS', meta={'status': 'Creating zip file...', 'progress': 100})
-            archive_file = os.path.join(app.config['API_DATA_DIRECTORY'],  str(self.request.id))
+            download_images(job_id, images, temp_dir)
+            redis_client.set(f'status:{job_id}', {'status': 'Creating zip file...', 'progress': len(images), 'total': len(images)})
+            archive_file = os.path.join(app.config['API_DATA_DIRECTORY'],  str(job_id))
             output_zip_file = shutil.make_archive(archive_file, 'zip', temp_dir)
     except Exception as e:
         logger.error(f"Error generating zip file: {e}")
         raise e
-    self.update_state(state='SUCCESS', meta={'status': 'Completed', 'progress': 100})
+    redis_client.set(f'status:{job_id}', json.dumps({'status': 'Completed', 'progress': len(images), 'total': len(images)}))
     return output_zip_file
