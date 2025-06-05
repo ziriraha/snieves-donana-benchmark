@@ -7,9 +7,9 @@ from PIL import Image
 from utils import Tester, prepare_environment, CONFI_DATASET_YAML, IMAGES_PATH
 
 MODEL = 'fasterrcnn'
-WEIGHTS_PATH = "fastercnn/outputs/training/res_1/best_model.pth"
+WEIGHTS_PATH = "outputs/training/res_1/best_model.pth"
 SAVE_PATH = "./"
-RUN_PATH = "fastercnn/outputs/inference/res_1/boxes.csv"
+RUN_PATH = "outputs/inference/res_1/boxes.csv"
 
 CLASSES = ['_background_', 'bos', 'caae', 'caca', 'can', 'capi', 'cer', 'dam', 'equ', 'fel', 'fsi', 'gen', 'her', 'lep', 'lut', 'lyn', 'mafo', 'mel', 'mus', 'ory', 'ovar', 'ovor', 'rara', 'sus', 'vul']
 
@@ -20,10 +20,10 @@ def prepare():
 
 def train(save_path=SAVE_PATH):
     print("Training FasterRCNN model...")
-    os.system(f"python fasterrcnn/train.py --data {CONFI_DATASET_YAML} --model fasterrcnn_resnet50_fpn_v2 --epochs 20 --batch 4")
+    os.system(f"python fasterrcnn/train.py --data {CONFI_DATASET_YAML} --model fasterrcnn_resnet50_fpn_v2 --epochs 20 --batch 4 --disable-wandb")
     print("Training finished")
 
-    destination = os.path.join(save_path, "fastercnn.pth")
+    destination = os.path.join(save_path, "fasterrcnn.pth")
     shutil.copy(WEIGHTS_PATH, destination)
     print("Model saved to ", destination)
 
@@ -32,7 +32,7 @@ def test(save_path=SAVE_PATH):
     tester = Tester()
 
     print("Running inference on test images")
-    os.system(f"python inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {CONFI_DATASET_YAML}")
+    os.system(f"python fasterrcnn/inference.py --input {IMAGES_PATH} --weights {WEIGHTS_PATH} --table --data {CONFI_DATASET_YAML}")
 
     print("Processing results...")
     results = {}
@@ -58,7 +58,7 @@ def test(save_path=SAVE_PATH):
     tester.run(get_pred)
 
     print("Tester finished\nSaving results...")
-    destination = os.path.join(save_path, "fastercnn_values.txt")
+    destination = os.path.join(save_path, "fasterrcnn_values.txt")
     tester.save_vals_to_txt(destination)
 
 if __name__ == "__main__":
