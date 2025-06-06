@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Dataset{% endblock %}
+{% block main %}
+<div class="container my-5">
+    <section class="text-center mb-4">
+        <h2>Dataset Overview</h2>
+        <p>This dataset contains images from various parks, with annotations for different species.</p>
+    </section>
+    <section class="card mx-auto" style="max-width: 720px;">
+        <h5 class="card-header">Dataset Request</h5>
+        <form class="card-body" method="post" action="/api/queries" id="dataset-form">
+            <fieldset>
+                <legend class="card-title mb-0">Filters</legend>
+                <div class="row ms-3 gy-2">
+                    <div class="col-sm">
+                        <label for="species" class="form-label">Species</label>
+                        <select name="species" id="species" class="form-select">
+                            <option value="">All Species</option>
+                            {% for species in species_list %}
+                            <option value="{{ species.code }}">{{ species.name|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm">
+                        <label for="parks" class="form-label">Parks</label>
+                        <select name="parks" id="parks" class="form-select">
+                            <option value="">All Parks</option>
+                            {% for park in parks_list %}
+                            <option value="{{ park.code }}">{{ park.name|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend class="card-title mb-0 mt-3">Date Range</legend>
+                <div class="row ms-3 gy-2">
+                    <div class="col-sm d-flex align-items-center">
+                        <label for="start_date" class="me-2">From</label>
+                        <input type="date" name="start_date" id="start_date" class="form-control" />
+                    </div>
+                    <div class="col d-flex align-items-center">
+                        <label for="end_date" class="me-2">To</label>
+                        <input type="date" name="end_date" id="end_date" class="form-control" />
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend class="card-title mb-0 mt-3">Pagination</legend>
+                <div class="row ms-3 gy-2">
+                    <div class="col-sm d-flex align-items-center">
+                        <label for="offset" class="me-2">Offset</label>
+                        <input type="number" name="offset" id="offset" placeholder="0" value="0" min="0" class="form-control" />
+                    </div>
+                    <div class="col-sm d-flex align-items-center">
+                        <label for="limit" class="me-2">Limit</label>
+                        <input type="number" name="limit" id="limit" placeholder="1000" value="1000" min="1" max="10000"
+                            class="form-control" />
+                    </div>
+                </div>
+            </fieldset>
+            <div class="mt-3 text-center">
+                <button type="submit" class="btn btn-primary">Request</button>
+            </div>
+        </form>
+    </section>
+    <section>
+        <p>Explain how the dataset is presented</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#datasetModal">open modal</button>
+    </section>
+    <dialog class="modal fade" id="datasetModal" tabindex="-1" aria-labelledby="datasetModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="datasetModalLabel">Dataset Download</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Your dataset request has been submitted successfully.</p>
+                    <div class="progress" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 75%"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" disabled>Download</button>
+                </div>
+            </div> 
+        </div>
+    </dialog>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById('dataset-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: form.method,
+            body: formData
+        }).then(response => {
+            if (response.error) {
+                alert('Dataset request submitted successfully. You will receive an email with the download link.');
+            } else {
+                alert('Error: ' + response.statusText);
+            }
+        }).catch(error => {
+            alert('An error occurred while processing your request.');
+        });
+    });
+</script>
+{% endblock %}

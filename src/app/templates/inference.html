@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Inference{% endblock %}
+{% block main %}
+<div class="container my-5">
+    <section class="text-center mb-4">
+        <h1 class="text-center my-4">Hi! Welcome to the Inference Page</h1>
+        <p class="text-center mb-4">Upload an image to perform inference.</p>
+    </section>
+    <section class="card mx-auto" style="max-width: 720px;">
+        <h5 class="card-header">Image Inference</h5>
+        <form class="card-body" method="post" action="/api/inference" id="inference-form" class="container">
+            <fieldset class="row">
+                <div class="col-auto">
+                    <label for="image" class="form-label">Image</label>
+                    <input type="file" name="image" id="image" accept="image/*" class="form-control" required>
+                </div>
+            </fieldset>
+            <div class="mt-3 text-center">
+                <button type="submit" class="btn btn-primary">Request</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById('inference-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: form.method,
+            body: formData
+        }).then(response => {
+            if (response.error) {
+                alert('Image sent for inference.');
+            } else {
+                alert('Error: ' + response.statusText);
+            }
+        }).catch(error => {
+            alert('An error occurred while processing your request.');
+        });
+    });
+</script>
+{% endblock %}
