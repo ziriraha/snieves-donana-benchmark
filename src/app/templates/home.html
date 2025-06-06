@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block style %}
+<style>
+    .hero {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{{ url_for('static', filename='images/animal_image.jpg') }}");
+        background-size: cover;
+        background-position: center;
+    }
+</style>
+{% endblock %}
+{% block main %}
+<section class="hero">
+    <div class="container text-center text-light py-5">
+        <h1 class="display-4">Welcome to SNieves-Doñana Benchmark</h1>
+        <p class="lead">A benchmark for animal detection models using images from various parks.</p>
+    </div>
+</section>
+<section class="container py-5">
+    <h2>About this project</h2>
+    <p>This project aims to create a benchmark for animal detection models using images from various parks. The dataset
+        will include images of different species, captured in various conditions and locations.</p>
+</section>
+{% endblock %}
