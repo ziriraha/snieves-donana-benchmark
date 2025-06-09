@@ -18,9 +18,6 @@ from .models import Image, Park, Species
 from .tasks import generate_zip
 from .utils import verify_date
 from .extensions import redis_client
-import logging
-logger = logging.getLogger(__name__)
-
 
 api_bp = Blueprint('api', __name__)
 

@@ -20,11 +20,14 @@
             training set is composed of <strong>24</strong> relevant species.
         </p>
         <ul>
-            <li><a class="link-light" href="/api/datasets/train" download>Train dataset (download)</a>: 75,835 images.
+            <li><a class="link-light" href="{{ url_for('api.get_dataset', set_name='train') }}" download>Train dataset
+                    (download)</a>: 75,835 images.
             </li>
-            <li><a class="link-light" href="/api/datasets/val" download>Validation dataset (download)</a>: 14,746
+            <li><a class="link-light" href="{{ url_for('api.get_dataset', set_name='val') }}" download>Validation
+                    dataset (download)</a>: 14,746
                 images.</li>
-            <li><a class="link-light" href="/api/datasets/test" download>Test dataset (download)</a>: 24,697 images.
+            <li><a class="link-light" href="{{ url_for('api.get_dataset', set_name='test') }}" download>Test dataset
+                    (download)</a>: 24,697 images.
             </li>
         </ul>
         <p>The folder structure for the training set is as follows:</p>
@@ -77,10 +80,10 @@
         <p>
             Requesting a custom dataset takes several minutes to complete. You can filter the dataset by
             <strong>species</strong>, <strong>parks</strong>, and <strong>date range</strong>. You are allowed a maximum
-            of 10.000 images per request.
+            of 10,000 images per request.
         </p>
         <div class="card mx-md-3">
-            <form class="card-body" method="post" action="/api/queries" id="dataset-form">
+            <form class="card-body" method="post" action="{{ url_for('api.create_job') }}" id="dataset-form">
                 <fieldset>
                     <legend class="card-title mb-0">Filters</legend>
                     <div class="row ms-3 gy-2">
@@ -151,17 +154,14 @@
             <div class="modal-body">
                 <p id="progress-status">Your dataset request has been submitted successfully.</p>
                 <div class="progress">
-                    <div id="progress-bar"
-                        class="progress-bar progress-bar-striped progress-bar-animated" 
-                        role="progressbar" 
-                        aria-valuenow="0" 
-                        aria-valuemin="0" 
-                        aria-valuemax="100" 
+                    <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
+                        role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
                         style="width: 100%" />
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close-button" type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="display: none;">Close</button>
+                <button id="close-button" type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    style="display: none;">Close</button>
                 <a id="download-link" class="btn btn-success" style="display: none;" download>Download</a>
             </div>
         </div>
@@ -178,76 +178,76 @@
             method: form.method,
             body: formData
         }).then(response => response.json())
-        .then(response => {
-            const modal = new bootstrap.Modal(document.getElementById('datasetModal'),
-                { backdrop: 'static', keyboard: false });
-            const downloadButton = document.getElementById('download-link'); 
-            const closeButton = document.getElementById('close-button');
-            const progressStatus = document.getElementById('progress-status');
-            const progressBar = document.getElementById('progress-bar');
+            .then(response => {
+                const modal = new bootstrap.Modal(document.getElementById('datasetModal'),
+                    { backdrop: 'static', keyboard: false });
+                const downloadButton = document.getElementById('download-link');
+                const closeButton = document.getElementById('close-button');
+                const progressStatus = document.getElementById('progress-status');
+                const progressBar = document.getElementById('progress-bar');
 
-            modal.show();
+                modal.show();
 
-            if (response.query_id) {
-                const checkStatus = setInterval(() => {
-                    fetch(`/api/queries/${response.query_id}`)
-                    .then(statusResponse => statusResponse.json())
-                    .then(statusData => {
-                        if (statusData.completed) {
-                            clearInterval(checkStatus);
-                            progressStatus.textContent = 'Dataset is ready for download.';
+                if (response.query_id) {
+                    const checkStatus = setInterval(() => {
+                        fetch(`/api/queries/${response.query_id}`)
+                            .then(statusResponse => statusResponse.json())
+                            .then(statusData => {
+                                if (statusData.completed) {
+                                    clearInterval(checkStatus);
+                                    progressStatus.textContent = 'Dataset is ready for download.';
 
-                            downloadButton.style.display = 'inline-block';
-                            downloadButton.href = `/api/queries/${response.query_id}/download`;
-                            downloadButton.innerHTML = `Download Dataset`;
-                            downloadButton.onclick = () => {
-                                modal.hide();
-                            };
+                                    downloadButton.style.display = 'inline-block';
+                                    downloadButton.href = `/api/queries/${response.query_id}/download`;
+                                    downloadButton.innerHTML = `Download Dataset`;
+                                    downloadButton.onclick = () => {
+                                        modal.hide();
+                                    };
 
-                            progressBar.style.width = '100%';
-                            progressBar.setAttribute('aria-valuenow', '100');
-                            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
-                        } else if (statusData.failed) {
-                            clearInterval(checkStatus);
-                            progressStatus.textContent = 'Dataset request failed.';
+                                    progressBar.style.width = '100%';
+                                    progressBar.setAttribute('aria-valuenow', '100');
+                                    progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                                } else if (statusData.failed) {
+                                    clearInterval(checkStatus);
+                                    progressStatus.textContent = 'Dataset request failed.';
 
-                            closeButton.style.display = 'inline-block';
+                                    closeButton.style.display = 'inline-block';
 
-                            progressBar.style.width = '100%';
-                            progressBar.setAttribute('aria-valuenow', '0');
-                            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
-                            progressBar.classList.add('bg-danger');
-                        } else {
-                            const progress = Math.min(statusData.progress, 100);
-                            progressStatus.textContent = statusData.status;
+                                    progressBar.style.width = '100%';
+                                    progressBar.setAttribute('aria-valuenow', '0');
+                                    progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                                    progressBar.classList.add('bg-danger');
+                                } else {
+                                    const progress = Math.min(statusData.progress, 100);
+                                    progressStatus.textContent = statusData.status;
 
-                            progressBar.style.width = `${progress}%`;
-                            progressBar.setAttribute('aria-valuenow', progress);
-                        }
-                    });
-                }, 1500);
-            } else {
-                progressStatus.textContent = 'An error occurred while processing your request: ' + response.error;
+                                    progressBar.style.width = `${progress}%`;
+                                    progressBar.setAttribute('aria-valuenow', progress);
+                                }
+                            });
+                    }, 1500);
+                } else {
+                    progressStatus.textContent = 'An error occurred while processing your request: ' + response.error;
+                    closeButton.style.display = 'inline-block';
+                    progressBar.style.width = '100%';
+                    progressBar.setAttribute('aria-valuenow', '0');
+                    progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                    progressBar.classList.add('bg-danger');
+                }
+            }).catch(error => {
+                const modal = new bootstrap.Modal(document.getElementById('datasetModal'));
+                const progressStatus = document.getElementById('progress-status');
+                const progressBar = document.getElementById('progress-bar');
+                const closeButton = document.getElementById('close-button');
+
+                modal.show();
+                progressStatus.textContent = 'An error occurred while processing your request: ' + error.message;
                 closeButton.style.display = 'inline-block';
                 progressBar.style.width = '100%';
                 progressBar.setAttribute('aria-valuenow', '0');
                 progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
                 progressBar.classList.add('bg-danger');
-            }
-        }).catch(error => {
-            const modal = new bootstrap.Modal(document.getElementById('datasetModal'));
-            const progressStatus = document.getElementById('progress-status');
-            const progressBar = document.getElementById('progress-bar');
-            const closeButton = document.getElementById('close-button');
-
-            modal.show();
-            progressStatus.textContent = 'An error occurred while processing your request: ' + error.message;
-            closeButton.style.display = 'inline-block';
-            progressBar.style.width = '100%';
-            progressBar.setAttribute('aria-valuenow', '0');
-            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
-            progressBar.classList.add('bg-danger');
-        });
+            });
     });
 </script>
 {% endblock %}
