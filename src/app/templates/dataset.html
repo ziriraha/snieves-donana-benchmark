@@ -20,13 +20,13 @@
             training set is composed of <strong>24</strong> relevant species.
         </p>
         <ul>
-            <li><a class="link-light" href="{{ url_for('api.get_dataset', set_name='train') }}" download>Train dataset
+            <li><a href="{{ url_for('api.get_dataset', set_name='train') }}" download>Train dataset
                     (download)</a>: 75,835 images.
             </li>
-            <li><a class="link-light" href="{{ url_for('api.get_dataset', set_name='val') }}" download>Validation
+            <li><a href="{{ url_for('api.get_dataset', set_name='val') }}" download>Validation
                     dataset (download)</a>: 14,746
                 images.</li>
-            <li><a class="link-light" href="{{ url_for('api.get_dataset', set_name='test') }}" download>Test dataset
+            <li><a href="{{ url_for('api.get_dataset', set_name='test') }}" download>Test dataset
                     (download)</a>: 24,697 images.
             </li>
         </ul>
