@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Benchmark{% endblock %}
+{% block main %}
+<section>
+    <div class="content">
+        <h2>The Benchmark</h2>
+        <p>
+            The benchmark is the calculation of the following metrics obtained by testing the model with the test
+            dataset:
+        </p>
+        <ul>
+            <li>Accuracy</li>
+            <li>Precision</li>
+            <li>Recall</li>
+            <li>F1 Score</li>
+            <li>Average IoU (Intersection over Union)</li>
+        </ul>
+        <p>
+            This <a href="https://github.com/ziriraha/snieves-donana-benchmark/blob/main/models/utils.py">testing
+                script</a> was the one used for benchmarking the models, its output was then used to calculate the
+            metrics using this
+            <a href="https://github.com/ziriraha/snieves-donana-benchmark/blob/main/models/analysis/study.ipynb">notebook</a>.
+        </p>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h2>The Models</h2>
+        <p>The benchmarked models are:</p>
+        <ul>
+            <li>YOLO</li>
+            <li>Megadetector</li>
+            <li>FasterRCNN</li>
+        </ul>
+        <p>
+            These models were trained and validated with the same dataset found in the
+            <a href="{{ url_for('views.dataset') }}">dataset page</a>.
+        </p>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h2>The Results</h2>
+        <p>
+            The results obtained from the benchmark are shown in the table below.
+        </p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th>Average IoU</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>YOLOv8n</td>
+                    <td>90.6%</td>
+                    <td>91.6%</td>
+                    <td>90.6%</td>
+                    <td>90.7%</td>
+                    <td>94.3%</td>
+                </tr>
+                <tr>
+                    <td>Megadetector</td>
+                    <td>87.0%</td>
+                    <td>87.9%</td>
+                    <td>87.0%</td>
+                    <td>86.8%</td>
+                    <td>94.0%</td>
+                </tr>
+                <tr>
+                    <td>FasterRCNN</td>
+                    <td>76.3%</td>
+                    <td>77.1%</td>
+                    <td>76.3%</td>
+                    <td>76.4%</td>
+                    <td>84.1%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
