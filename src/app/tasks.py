@@ -150,7 +150,7 @@ def generate_zip(self, images):
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
             download_images(job_id, images, temp_dir)
-            redis_client.set(f'status:{job_id}', {'status': 'Creating zip file...', 'progress': len(images), 'total': len(images)})
+            redis_client.set(f'status:{job_id}', json.dumps({'status': 'Creating zip file...', 'progress': len(images), 'total': len(images)}))
             archive_file = os.path.join(app.config['API_DATA_DIRECTORY'],  str(job_id))
             output_zip_file = shutil.make_archive(archive_file, 'zip', temp_dir)
     except Exception as e:

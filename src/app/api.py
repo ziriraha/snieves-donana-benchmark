@@ -18,6 +18,9 @@ from .models import Image, Park, Species
 from .tasks import generate_zip
 from .utils import verify_date
 from .extensions import redis_client
+import logging
+logger = logging.getLogger(__name__)
+
 
 api_bp = Blueprint('api', __name__)
 
@@ -85,6 +88,9 @@ async def create_job():
     limit = min(request.form.get('limit', DEFAULT_LIMIT, type=int), MAX_LIMIT)
     offset = request.form.get('offset', default=0, type=int)
 
+    parks = [p.strip() for p in parks if p.strip()]
+    species = [s.strip() for s in species if s.strip()]
+
     query = Image.query
     if parks: query = query.filter(Image.park.has(Park.code.in_(parks)))
     if species: query = query.filter(Image.species.has(Species.code.in_(species)))
@@ -105,13 +111,26 @@ async def create_job():
 
 @api_bp.route('/queries/<query_id>', methods=['GET'])
 async def get_job_status(query_id):
-    task = json.loads(redis_client.get(f'status:{query_id}'))
-    if not task: return jsonify({'error': 'Query information not found.'}), 404
-    return jsonify({
+    task = redis_client.get(f'status:{query_id}')
+    async_task = AsyncResult(query_id)
+    if not (task and async_task): return jsonify({'error': 'Query information not found.'}), 404
+
+    task_status = json.loads(task)
+    response = {
         "query_id": query_id,
-        "status": task['status'],
-        "progress": round(task['progress'] / task['total'] * 100)
-    }), 200
+        "status": task_status['status'],
+        "progress": round(task_status['progress'] / task_status['total'] * 100)
+    }
+
+    if async_task.failed():
+        redis_client.delete(f'status:{query_id}')
+        response['failed'] = True
+        response['error'] = async_task.result if async_task.result else 'An error occurred while processing the request.'
+    elif async_task.successful():
+        redis_client.delete(f'status:{query_id}')
+        response['completed'] = True
+
+    return jsonify(response), 200
 
 @api_bp.route('/queries/<query_id>/download', methods=['GET'])
 async def get_job_result(query_id):

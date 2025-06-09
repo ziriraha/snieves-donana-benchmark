@@ -1,94 +1,171 @@
 {% extends 'base.html' %}
 {% block title %}Dataset{% endblock %}
 {% block main %}
-<div class="container my-5">
-    <section class="text-center mb-4">
-        <h2>Dataset Overview</h2>
-        <p>This dataset contains images from various parks, with annotations for different species.</p>
-    </section>
-    <section class="card mx-auto" style="max-width: 720px;">
-        <h5 class="card-header">Dataset Request</h5>
-        <form class="card-body" method="post" action="/api/queries" id="dataset-form">
-            <fieldset>
-                <legend class="card-title mb-0">Filters</legend>
-                <div class="row ms-3 gy-2">
-                    <div class="col-sm">
-                        <label for="species" class="form-label">Species</label>
-                        <select name="species" id="species" class="form-select">
-                            <option value="">All Species</option>
-                            {% for species in species_list %}
-                            <option value="{{ species.code }}">{{ species.name|capitalize }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-sm">
-                        <label for="parks" class="form-label">Parks</label>
-                        <select name="parks" id="parks" class="form-select">
-                            <option value="">All Parks</option>
-                            {% for park in parks_list %}
-                            <option value="{{ park.code }}">{{ park.name|capitalize }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </fieldset>
+<section>
+    <div class="content">
+        <h2>The Dataset</h2>
+        <p>
+            The dataset contains <strong>1,331,309</strong> images across <strong>40</strong> categories (24 excluding
+            undesired categories). It is curated for training and evaluating object detection models, particularly in
+            natural environments. Annotations are provided in <strong>YOLO</strong> format.
+        </p>
+    </div>
+</section>
 
-            <fieldset>
-                <legend class="card-title mb-0 mt-3">Date Range</legend>
-                <div class="row ms-3 gy-2">
-                    <div class="col-sm d-flex align-items-center">
-                        <label for="start_date" class="me-2">From</label>
-                        <input type="date" name="start_date" id="start_date" class="form-control" />
-                    </div>
-                    <div class="col d-flex align-items-center">
-                        <label for="end_date" class="me-2">To</label>
-                        <input type="date" name="end_date" id="end_date" class="form-control" />
-                    </div>
-                </div>
-            </fieldset>
+<section class="bg-dark text-light">
+    <div class="content">
+        <h2>Our Training Set</h2>
+        <p>
+            After filtering out irrelevant classes, discarding images contained in bursts and balancing the data, our
+            training set is composed of <strong>24</strong> relevant species.
+        </p>
+        <ul>
+            <li><a class="link-light" href="/api/datasets/train" download>Train dataset (download)</a>: 75,835 images.
+            </li>
+            <li><a class="link-light" href="/api/datasets/val" download>Validation dataset (download)</a>: 14,746
+                images.</li>
+            <li><a class="link-light" href="/api/datasets/test" download>Test dataset (download)</a>: 24,697 images.
+            </li>
+        </ul>
+        <p>The folder structure for the training set is as follows:</p>
+        <ul>
+            <li><strong>images/</strong> — Contains all images in JPG format.</li>
+            <li><strong>labels/</strong> — Contains annotations in YOLO format, with each file named after its
+                corresponding image.</li>
+        </ul>
+    </div>
+</section>
 
-            <fieldset>
-                <legend class="card-title mb-0 mt-3">Pagination</legend>
-                <div class="row ms-3 gy-2">
-                    <div class="col-sm d-flex align-items-center">
-                        <label for="offset" class="me-2">Offset</label>
-                        <input type="number" name="offset" id="offset" placeholder="0" value="0" min="0" class="form-control" />
+<section>
+    <div class="content">
+        <h2>Custom Datasets</h2>
+        <p>
+            The datasets requested via the API or the following form are organized by park and species:
+        </p>
+        <ul>
+            <li><strong>[park]/[species]/</strong> — Each folder contains images and annotations for that species in
+                that park.</li>
+            <li>Each image is in JPG format, with a corresponding annotation file in <strong>.txt</strong> format.</li>
+        </ul>
+        <p style="text-align: left;">
+            Example path: <code>donana/vul/2f110785-aa7e-4607-a4a0-cfcb0893491e.jpg</code> and
+            <code>donana/vul/2f110785-aa7e-4607-a4a0-cfcb0893491e.txt</code>
+            <br>
+            Annotations include bounding box coordinates and class labels per image.
+        </p>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h2>Available Tools</h2>
+        <p>We have provided scripts to manipulate the custom dataset:</p>
+        <ul>
+            <li><strong>clean_bursts.py</strong> — Removes burst images taken within 1 second to reduce redundancy.</li>
+            <li><strong>convert_to_xml.py</strong> — Converts YOLO annotations to <strong>XML</strong> format for model
+                compatibility.</li>
+            <li><strong>change_shape.py</strong> — Reshaped the folder structure of the dataset to be two folders
+                (images/labels).</li>
+        </ul>
+        <p>Each script can be used as a command line tool. For example: <code>python3 clean_bursts.py --help</code></p>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h2>Request a Custom Dataset</h2>
+        <p>
+            Requesting a custom dataset takes several minutes to complete. You can filter the dataset by
+            <strong>species</strong>, <strong>parks</strong>, and <strong>date range</strong>. You are allowed a maximum
+            of 10.000 images per request.
+        </p>
+        <div class="card mx-md-3">
+            <form class="card-body" method="post" action="/api/queries" id="dataset-form">
+                <fieldset>
+                    <legend class="card-title mb-0">Filters</legend>
+                    <div class="row ms-3 gy-2">
+                        <div class="col-sm">
+                            <label for="species" class="form-label">Species</label>
+                            <select name="species" id="species" class="form-select">
+                                <option value="">All Species</option>
+                                {% for species in species_list %}
+                                <option value="{{ species.code }}">{{ species.name|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm">
+                            <label for="parks" class="form-label">Parks</label>
+                            <select name="parks" id="parks" class="form-select">
+                                <option value="">All Parks</option>
+                                {% for park in parks_list %}
+                                <option value="{{ park.code }}">{{ park.name|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-sm d-flex align-items-center">
-                        <label for="limit" class="me-2">Limit</label>
-                        <input type="number" name="limit" id="limit" placeholder="1000" value="1000" min="1" max="10000"
-                            class="form-control" />
+                </fieldset>
+
+                <fieldset>
+                    <legend class="card-title mb-0 mt-3">Date Range</legend>
+                    <div class="row ms-3 gy-2">
+                        <div class="col-sm d-flex align-items-center">
+                            <label for="start_date" class="me-2">From</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" />
+                        </div>
+                        <div class="col d-flex align-items-center">
+                            <label for="end_date" class="me-2">To</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control" />
+                        </div>
                     </div>
-                </div>
-            </fieldset>
-            <div class="mt-3 text-center">
-                <button type="submit" class="btn btn-primary">Request</button>
-            </div>
-        </form>
-    </section>
-    <section>
-        <p>Explain how the dataset is presented</p>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#datasetModal">open modal</button>
-    </section>
-    <dialog class="modal fade" id="datasetModal" tabindex="-1" aria-labelledby="datasetModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="datasetModalLabel">Dataset Download</h5>
-                </div>
-                <div class="modal-body">
-                    <p>Your dataset request has been submitted successfully.</p>
-                    <div class="progress" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 75%"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend class="card-title mb-0 mt-3">Pagination</legend>
+                    <div class="row ms-3 gy-2">
+                        <div class="col-sm d-flex align-items-center">
+                            <label for="offset" class="me-2">Offset</label>
+                            <input type="number" name="offset" id="offset" placeholder="0" value="0" min="0"
+                                class="form-control" />
+                        </div>
+                        <div class="col-sm d-flex align-items-center">
+                            <label for="limit" class="me-2">Limit</label>
+                            <input type="number" name="limit" id="limit" placeholder="1000" value="1000" min="1"
+                                max="10000" class="form-control" />
+                        </div>
                     </div>
+                </fieldset>
+                <div class="mt-3 text-center">
+                    <button type="submit" class="btn btn-primary">Request</button>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" disabled>Download</button>
-                </div>
-            </div> 
+            </form>
         </div>
-    </dialog>
+    </div>
+</section>
+
+<div class="modal fade" id="datasetModal" tabindex="-1" aria-labelledby="datasetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="datasetModalLabel">Dataset Download</h5>
+            </div>
+            <div class="modal-body">
+                <p id="progress-status">Your dataset request has been submitted successfully.</p>
+                <div class="progress">
+                    <div id="progress-bar"
+                        class="progress-bar progress-bar-striped progress-bar-animated" 
+                        role="progressbar" 
+                        aria-valuenow="0" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100" 
+                        style="width: 100%" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-button" type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="display: none;">Close</button>
+                <a id="download-link" class="btn btn-success" style="display: none;" download>Download</a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -100,14 +177,76 @@
         fetch(form.action, {
             method: form.method,
             body: formData
-        }).then(response => {
-            if (response.error) {
-                alert('Dataset request submitted successfully. You will receive an email with the download link.');
+        }).then(response => response.json())
+        .then(response => {
+            const modal = new bootstrap.Modal(document.getElementById('datasetModal'),
+                { backdrop: 'static', keyboard: false });
+            const downloadButton = document.getElementById('download-link'); 
+            const closeButton = document.getElementById('close-button');
+            const progressStatus = document.getElementById('progress-status');
+            const progressBar = document.getElementById('progress-bar');
+
+            modal.show();
+
+            if (response.query_id) {
+                const checkStatus = setInterval(() => {
+                    fetch(`/api/queries/${response.query_id}`)
+                    .then(statusResponse => statusResponse.json())
+                    .then(statusData => {
+                        if (statusData.completed) {
+                            clearInterval(checkStatus);
+                            progressStatus.textContent = 'Dataset is ready for download.';
+
+                            downloadButton.style.display = 'inline-block';
+                            downloadButton.href = `/api/queries/${response.query_id}/download`;
+                            downloadButton.innerHTML = `Download Dataset`;
+                            downloadButton.onclick = () => {
+                                modal.hide();
+                            };
+
+                            progressBar.style.width = '100%';
+                            progressBar.setAttribute('aria-valuenow', '100');
+                            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                        } else if (statusData.failed) {
+                            clearInterval(checkStatus);
+                            progressStatus.textContent = 'Dataset request failed.';
+
+                            closeButton.style.display = 'inline-block';
+
+                            progressBar.style.width = '100%';
+                            progressBar.setAttribute('aria-valuenow', '0');
+                            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                            progressBar.classList.add('bg-danger');
+                        } else {
+                            const progress = Math.min(statusData.progress, 100);
+                            progressStatus.textContent = statusData.status;
+
+                            progressBar.style.width = `${progress}%`;
+                            progressBar.setAttribute('aria-valuenow', progress);
+                        }
+                    });
+                }, 1500);
             } else {
-                alert('Error: ' + response.statusText);
+                progressStatus.textContent = 'An error occurred while processing your request: ' + response.error;
+                closeButton.style.display = 'inline-block';
+                progressBar.style.width = '100%';
+                progressBar.setAttribute('aria-valuenow', '0');
+                progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                progressBar.classList.add('bg-danger');
             }
         }).catch(error => {
-            alert('An error occurred while processing your request.');
+            const modal = new bootstrap.Modal(document.getElementById('datasetModal'));
+            const progressStatus = document.getElementById('progress-status');
+            const progressBar = document.getElementById('progress-bar');
+            const closeButton = document.getElementById('close-button');
+
+            modal.show();
+            progressStatus.textContent = 'An error occurred while processing your request: ' + error.message;
+            closeButton.style.display = 'inline-block';
+            progressBar.style.width = '100%';
+            progressBar.setAttribute('aria-valuenow', '0');
+            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+            progressBar.classList.add('bg-danger');
         });
     });
 </script>
