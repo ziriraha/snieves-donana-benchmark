@@ -3,7 +3,8 @@
 {% block style %}
 <style>
     .hero {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{{ url_for('static', filename='images/animal_image.jpg') }}");
+        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url("{{ url_for('static', filename='images/animal_image.jpg') }}");
         background-size: cover;
         background-position: center;
     }
@@ -16,9 +17,47 @@
         <p class="lead">A benchmark for animal detection models using images from various parks.</p>
     </div>
 </section>
-<section class="container py-5">
-    <h2>About this project</h2>
-    <p>This project aims to create a benchmark for animal detection models using images from various parks. The dataset
-        will include images of different species, captured in various conditions and locations.</p>
+
+<section>
+    <div class="content">
+        <h2>About this project</h2>
+        <p>
+            Wildlife image classification and detection represent key technologies for monitoring animal populations,
+            protecting endangered species, and identifying predatory species that impact livestock using camera traps.
+        </p>
+        <p>
+            This project (inspired by the Serengeti Benchmark, focused on the fauna of Serengeti National Park in
+            Tanzania, Africa) will be implemented in the Doñana and Sierra de las Nieves parks. More than 30 terabytes
+            of images provided by the EnBiC2Lab Lab project will be used.
+        </p>
+        <p>
+            Scientific comparison is essential. By establishing a benchmark, a standard is provided against which other
+            researchers can evaluate their results, fostering innovation in the field.
+        </p>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h2>Our objective</h2>
+        <p>
+            By developing a benchmark using images from these parks and providing the dataset. Our goal is to encourage
+            other researchers to develop their own
+            models with this data and compare them with ours.
+        </p>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h2>Features</h2>
+        <p>The functionalities developed in this project include:</p>
+        <ul>
+            <li>An interface for downloading and filtering over 30 terabytes of camera trap images collected from two
+                protected areas.</li>
+            <li>An interface for applying an animal detection model.</li>
+            <li>An API enabling programmatic access to the previously mentioned functionalities.</li>
+        </ul>
+    </div>
 </section>
 {% endblock %}
