@@ -73,7 +73,7 @@ def download_dataset_zips(file_path):
 
             futures = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=app.config['MAX_CELERY_THREADS']) as executor:
-                for _, row in df.iterrows():
+                for _, row in tqdm(df.iterrows(), total=len(df), desc=f'Downloading dataset {set_name}'):
                     image = Image.query.filter_by(path=row['path']).first()
                     if not image: logger.warning(f"Image with path {row['path']} not found in database."); continue
 
@@ -81,7 +81,7 @@ def download_dataset_zips(file_path):
                     label_path = os.path.join(labels_path, f'{image.id}.txt')
                     futures.append(executor.submit(download_image, image.to_dict(), image_path, label_path))
 
-            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=f'Downloading images for {set_name}'):
+            for future in concurrent.futures.as_completed(futures):
                 iid, bbox = future.result()
                 if bbox:
                     img = Image.query.get(iid)
@@ -97,7 +97,7 @@ def calculate_bbox_wrapper(base64_image):
     bytes_image = base64.b64decode(base64_image.encode('utf-8'))
     return calculate_bbox(bytes_image)
 
-def download_image(job_id, image, image_path, label_path):
+def download_image(image, image_path, label_path, job_id=None):
     new_bbox = None
     try:
         bytes_image = download_image_from_minio(image['path'], image_path)
@@ -116,15 +116,17 @@ def download_image(job_id, image, image_path, label_path):
         if os.path.exists(image_path): os.remove(image_path)
         if os.path.exists(label_path): os.remove(label_path)
 
-    progress = json.loads(redis_client.get(f'status:{job_id}'))
-    progress['progress'] += 1
-    redis_client.set(f'status:{job_id}', json.dumps(progress))
+    if job_id:
+        progress = json.loads(redis_client.get(f'status:{job_id}'))
+        progress['progress'] += 1
+        redis_client.set(f'status:{job_id}', json.dumps(progress))
     return image['id'], new_bbox
 
 @shared_task
-def download_images(job_id, images, destination):
+def download_images(images, destination, job_id=None):
     futures = []
-    redis_client.set(f'status:{job_id}', json.dumps({'status': 'Downloading images...', 'progress': 0, 'total': len(images)}))
+    if job_id: redis_client.set(f'status:{job_id}', json.dumps({'status': 'Downloading images...', 'progress': 0, 'total': len(images)}))
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=app.config['MAX_CELERY_THREADS']) as executor:
         for image in images:
             save_path = os.path.join(destination, image['park']['code'], image['species']['code'])
@@ -134,7 +136,8 @@ def download_images(job_id, images, destination):
             image_path = os.path.join(save_path, f'{filename}.jpg')
             label_path = os.path.join(save_path, f'{filename}.txt')
 
-            futures.append(executor.submit(download_image, job_id, image, image_path, label_path))
+            futures.append(executor.submit(download_image, image, image_path, label_path, job_id))
+
     for future in concurrent.futures.as_completed(futures):
         iid, bbox = future.result()
         if bbox:
@@ -149,7 +152,7 @@ def generate_zip(self, images):
     redis_client.set(f'status:{job_id}', json.dumps({'status': 'Starting...', 'progress': 0, 'total': len(images)}))
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
-            download_images(job_id, images, temp_dir)
+            download_images(images, temp_dir, job_id)
             redis_client.set(f'status:{job_id}', json.dumps({'status': 'Creating zip file...', 'progress': len(images), 'total': len(images)}))
             archive_file = os.path.join(app.config['API_DATA_DIRECTORY'],  str(job_id))
             output_zip_file = shutil.make_archive(archive_file, 'zip', temp_dir)
