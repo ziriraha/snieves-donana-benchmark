@@ -6,6 +6,7 @@ from flask.cli import with_appcontext
 
 from .extensions import db, celery_init_app
 from .tasks import import_data_from_zip, download_dataset_zips
+from .constants import DATASETS
 
 from .views import views_bp
 from .api import api_bp
@@ -55,7 +56,7 @@ def delete_custom_datasets_command():
         return
 
     for filename in os.listdir(api_data_dir):
-        if filename.endswith('.zip') and filename not in app.config['DATASETS']:
+        if filename.endswith('.zip') and filename.replace('.zip', '') not in DATASETS:
             file_path = os.path.join(api_data_dir, filename)
             os.remove(file_path)
             click.echo(f'Deleted custom dataset: {filename}')
