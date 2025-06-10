@@ -43,6 +43,24 @@ def download_datasets_command(background):
         task.get()
         click.echo('Datasets downloaded successfully.')
 
+@click.command('delete-custom-datasets')
+@with_appcontext
+def delete_custom_datasets_command():
+    """Deletes all custom datasets from the API data directory."""
+    from flask import current_app as app
+    import os
+    api_data_dir = app.config['API_DATA_DIRECTORY']
+    if not os.path.exists(api_data_dir):
+        click.echo('API data directory does not exist.')
+        return
+
+    for filename in os.listdir(api_data_dir):
+        if filename.endswith('.zip') and filename not in app.config['DATASETS']:
+            file_path = os.path.join(api_data_dir, filename)
+            os.remove(file_path)
+            click.echo(f'Deleted custom dataset: {filename}')
+    click.echo('Custom datasets deleted successfully.')
+
 def create_app():
     setup_logging()
 
