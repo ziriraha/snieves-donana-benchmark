@@ -37,7 +37,7 @@ def download_datasets_command(background):
     from flask import current_app as app
     click.echo('Downloading datasets...')
     task = download_dataset_zips.delay(app.config['DEFAULT_DATA_ZIP_PATH'])
-    click.echo(f"Download started in the background with id {task.id}. You can check the status with Celery.")
+    click.echo(f"Download started in the background with id {task.id}. This will take several hours to complete.")
     if not background:
         click.echo('Waiting for download to complete...')
         task.get()
@@ -78,4 +78,5 @@ def create_app():
 
     app.cli.add_command(init_db_command)
     app.cli.add_command(download_datasets_command)
+    app.cli.add_command(delete_custom_datasets_command)
     return app

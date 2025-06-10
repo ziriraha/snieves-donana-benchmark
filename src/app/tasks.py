@@ -73,7 +73,7 @@ def download_dataset_zips(file_path):
 
             futures = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=app.config['MAX_CELERY_THREADS']) as executor:
-                for _, row in tqdm(df.iterrows(), total=len(df), desc=f'Downloading dataset {set_name}'):
+                for _, row in df.iterrows():
                     image = Image.query.filter_by(path=row['path']).first()
                     if not image: logger.warning(f"Image with path {row['path']} not found in database."); continue
 
