@@ -138,7 +138,7 @@
                     </div>
                 </fieldset>
                 <div class="mt-3 text-center">
-                    <button type="submit" class="btn btn-primary">Request</button>
+                    <button id="request-button" type="submit" class="btn btn-primary">Request</button>
                 </div>
             </form>
         </div>
@@ -174,18 +174,21 @@
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
+        const modal = new bootstrap.Modal(document.getElementById('datasetModal'),
+                    { backdrop: 'static', keyboard: false });
+        const downloadButton = document.getElementById('download-link');
+        const closeButton = document.getElementById('close-button');
+        const progressStatus = document.getElementById('progress-status');
+        const progressBar = document.getElementById('progress-bar');
+        const requestButton = document.getElementById('request-button');
+
+        requestButton.disabled = true;
+
         fetch(form.action, {
             method: form.method,
             body: formData
         }).then(response => response.json())
             .then(response => {
-                const modal = new bootstrap.Modal(document.getElementById('datasetModal'),
-                    { backdrop: 'static', keyboard: false });
-                const downloadButton = document.getElementById('download-link');
-                const closeButton = document.getElementById('close-button');
-                const progressStatus = document.getElementById('progress-status');
-                const progressBar = document.getElementById('progress-bar');
-
                 modal.show();
 
                 if (response.query_id) {
@@ -207,6 +210,7 @@
                                     progressBar.style.width = '100%';
                                     progressBar.setAttribute('aria-valuenow', '100');
                                     progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+                                    requestButton.disabled = false;
                                 } else if (statusData.failed) {
                                     clearInterval(checkStatus);
                                     progressStatus.textContent = 'Dataset request failed.';
@@ -217,6 +221,7 @@
                                     progressBar.setAttribute('aria-valuenow', '0');
                                     progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
                                     progressBar.classList.add('bg-danger');
+                                    requestButton.disabled = false;
                                 } else {
                                     const progress = Math.min(statusData.progress, 100);
                                     progressStatus.textContent = statusData.status;
@@ -233,20 +238,18 @@
                     progressBar.setAttribute('aria-valuenow', '0');
                     progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
                     progressBar.classList.add('bg-danger');
+                    requestButton.disabled = false;
                 }
             }).catch(error => {
-                const modal = new bootstrap.Modal(document.getElementById('datasetModal'));
-                const progressStatus = document.getElementById('progress-status');
-                const progressBar = document.getElementById('progress-bar');
-                const closeButton = document.getElementById('close-button');
-
                 modal.show();
+
                 progressStatus.textContent = 'An error occurred while processing your request: ' + error.message;
                 closeButton.style.display = 'inline-block';
                 progressBar.style.width = '100%';
                 progressBar.setAttribute('aria-valuenow', '0');
                 progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
                 progressBar.classList.add('bg-danger');
+                requestButton.disabled = false;
             });
     });
 </script>
