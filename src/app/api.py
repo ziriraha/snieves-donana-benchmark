@@ -133,11 +133,11 @@ async def get_job_status(query_id):
 async def get_job_result(query_id):
     task = AsyncResult(query_id)
     zip_file = task.get()
-    if not zip_file: return jsonify({'error': ERROR_GENERATE_ZIP}), 500
+    if not (zip_file and os.path.exists(zip_file)): return jsonify({'error': ERROR_GENERATE_ZIP}), 500
 
     @after_this_request
     def remove_zip(response):
-        os.remove(zip_file)
+        if os.path.exists(zip_file): os.remove(zip_file)
         redis_client.delete(f'status:{query_id}')
         return response
 
