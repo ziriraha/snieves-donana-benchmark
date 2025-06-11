@@ -48,20 +48,25 @@ The `confi_dataset.yaml` and `dataset.yaml` files are the ones needed by the mod
 | emp   | empty                    | empty                                    |
 
 ## CSVs
-In the releases section of the repository are all the csvs of the project:
+In the releases section of the repository are all the csvs of the project (`csv.zip`):
 - `raw`: all the images provided.
 - `full`: all the images with datetime information.
 - `full-interested`: Only the images we are interested in.
 - `clean`: images taken in the same minute are all discarded but one. The goal is to remove duplicate images.
 - `train`, `val`, `test`: splits for the training dataset.
 
-## Processing
-The `raw.csv` was the dataset provided. First, some species were excluded and the timestamp (`get_datetime.py`) of the images was added to generate `full.csv`. The `clear_bursts.py` script was used to remove images from the same burst (this was done to remove duplicates), the result is the `clean.csv`. Finally, the `dataset_splitter.py` script was run to generate the `train.csv`, `val.csv`, `test.csv`.
+## Scripts
+### Processing Scripts
+- `get_datetime.py`: Retrieves the datetime of the images in a csv and generates a new csv with the datetime information.
+- `clear_bursts.py`: Removes images taken in the same minute, keeping only one image per minute to avoid duplicates.
+- `splitter.py`: Splits the dataset into train, validation, and test sets.
 
-### Special Datasets
-The dataset downloaded via the API may download the data in the following directory structure: `dataset/split/park/species/images|labels/image.jpg|txt` to convert from this to a compatible format for the models (`dataset/split/images|labels/image.jpg|txt`) use the `change_shape.py` script.
+### Special Scripts
+- `change_shape.py`: Converts the dataset directory structure from `dataset/split/park/species/images|labels/image.jpg|txt` to `dataset/split/images|labels/image.jpg|txt` for compatibility with the models.
+- `add_xml_annotation.py`: Converts the .txt annotations to .xml format for FasterRCNN compatibility.
 
-FasterRCNN expects xml files instead of .txt. For this, the `add_xml_annotation.py` script can be used on a dataset directory with `images` and `labels` folder to create a `xml_labels` folder.
-
-## Downloading the dataset
+### Downloader
 The `downloader.py` script needs a .env with Minio access information, similar to the one needed for the app. Make sure to have the yolov5 repository in the same directory and to set PYTHONPATH to the working directory and to the yolov5 directory. This is needed for Megadetector.
+
+## Analysis
+In the `analysis/` folder is available the notebook used to analyze the dataset. In the `analysis/images/` folder is where the graphs generated were saved. The script needs the `csv` files in the same directory to work.

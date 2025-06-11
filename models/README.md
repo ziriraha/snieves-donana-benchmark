@@ -30,6 +30,6 @@ python3 train_test_*.py
 ```
 
 ## Analysis
-In the `analysis/` folder is available the notebook used to analyze the models. In the `analysis/images/` folder is where the graphs generated were saved manually.
+In the `analysis/` folder is available the notebook used to analyze the models. In the `analysis/images/` folder is where the graphs generated were saved.
 
 To use the `study.ipynb` notebook just add the model's values text file in the same directory and modify the model names in the notebook (you also have to choose a color for each model).

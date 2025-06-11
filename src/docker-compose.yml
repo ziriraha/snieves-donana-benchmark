@@ -20,8 +20,6 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   celery:
     container_name: celery
@@ -34,6 +32,7 @@ services:
       - api_data:/app/data
     depends_on:
       - redis
+      - db
 
   redis:
     container_name: redis

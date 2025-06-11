@@ -10,8 +10,7 @@ This project provides:
 ## Directory Structure
 ```
 snieves-donana-benchmark/
-├── docs/                              # Documentation
 ├── dataset/                           # Dataset files and analysis
 ├── models/                            # Models implementation and analysis
-└── app/                               # Benchmark web application
+└── src/                               # Benchmark web application
 ```
