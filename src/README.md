@@ -9,6 +9,7 @@ To run the app execute the following command in the `src` directory with docker 
 ```bash
 docker compose up --build -d
 ```
+Optionally, you can use `--scale celery=3` to scale the celery to use 3 workers, which can help with performance when processing large datasets. And the `config.toml` file can be modified to add more workers for the flask app. These actions will consume more resources.
 
 To populate the database, open a shell in the flask app container and run the init-db command:
 ```bash
@@ -27,6 +28,8 @@ In case you ever need to delete custom datasets:
 ```bash
 flask delete-custom-datasets
 ```
+
+Once the app is running, you can access it at `http://localhost:4000/`.
 
 # Files needed
 The `db-data.zip` file contains all the information the app needs. The `inference.pt` file is necessary for the inference.

@@ -2,12 +2,12 @@ services:
   app:
     container_name: app
     build: .
+    command: ["hypercorn", "-c", "config.toml", "asgi:app"]
     env_file:
       - .env
     ports:
       - "4000:4000"
     volumes:
-      - .:/app
       - api_data:/app/data
     depends_on:
       - db
@@ -22,13 +22,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   celery:
-    container_name: celery
     build: .
     env_file:
       - .env
     command: celery -A make_celery worker --loglevel INFO
     volumes:
-      - .:/app
       - api_data:/app/data
     depends_on:
       - redis

@@ -2,7 +2,7 @@ from io import BytesIO
 import os
 
 from celery.result import AsyncResult
-from flask import Blueprint, after_this_request, jsonify, request, send_file, current_app
+from flask import Blueprint, after_this_request, jsonify, request, send_file, send_from_directory, current_app
 import json
 import base64
 
@@ -26,13 +26,10 @@ api_bp = Blueprint('api', __name__)
 
 @api_bp.route('/datasets/<set_name>', methods=['GET'])
 async def get_dataset(set_name):
-    if set_name not in DATASETS: return jsonify({'error': f"Dataset {set_name} not found. Available datasets are: {', '.join(DATASETS)}"}), 404
-
     dataset_path = os.path.join(current_app.config['API_DATA_DIRECTORY'], f"{set_name}.zip")
-    if not os.path.exists(dataset_path):
+    if set_name in DATASETS and not os.path.exists(dataset_path):
         return jsonify({'error': f"Dataset {set_name} not found but should exist."}), 500
-    
-    return send_file(dataset_path, as_attachment=True, download_name=f"{set_name}.zip"), 200
+    return send_from_directory(os.path.join('..', current_app.config['API_DATA_DIRECTORY']), f"{set_name}.zip", as_attachment=True, download_name=f"{set_name}.zip"), 200
 
 @api_bp.route('/species', methods=['GET'])
 async def get_species():
