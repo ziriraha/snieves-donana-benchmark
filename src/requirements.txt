@@ -7,3 +7,4 @@ flask-SQLAlchemy
 psycopg2-binary
 celery
 redis
+ultralytics

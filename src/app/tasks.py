@@ -14,7 +14,7 @@ import json
 from .extensions import db, redis_client
 from .constants import DATASETS
 from .models import Image, Park, Species
-from .utils import download_image_from_minio, calculate_bbox
+from .utils import download_image_from_minio, calculate_bbox, get_inference_calculation
 import base64
 
 logger = logging.getLogger(__name__)
@@ -161,3 +161,13 @@ def generate_zip(self, images):
         raise e
     redis_client.set(f'status:{job_id}', json.dumps({'status': 'Completed', 'progress': len(images), 'total': len(images)}))
     return output_zip_file
+
+@shared_task
+def inference_image(base64_image):
+    bytes_image = base64.b64decode(base64_image.encode('utf-8'))
+    scode, bbox, bbox_image = get_inference_calculation(bytes_image)
+    if bbox: 
+        bbox = {'x': bbox[0], 'y': bbox[1], 'width': bbox[2], 'height': bbox[3]}
+        base64_bbox_image = base64.b64encode(bbox_image).decode('utf-8')
+
+    return {'species_code': scode, 'bbox': bbox, 'bbox_image': base64_bbox_image if bbox else None}

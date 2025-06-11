@@ -1,8 +1,10 @@
+from io import BytesIO
 import os
 
 from celery.result import AsyncResult
 from flask import Blueprint, after_this_request, jsonify, request, send_file, current_app
 import json
+import base64
 
 from .constants import (
     DEFAULT_LIMIT,
@@ -13,9 +15,10 @@ from .constants import (
     ERROR_GENERATE_ZIP,
     DATASETS,
     MAX_LIMIT,
+    ERROR_INFERENCE,
 )
 from .models import Image, Park, Species
-from .tasks import generate_zip
+from .tasks import generate_zip, inference_image
 from .utils import verify_date
 from .extensions import redis_client
 
@@ -142,3 +145,25 @@ async def get_job_result(query_id):
         return response
 
     return send_file(zip_file, as_attachment=True, download_name=f'{query_id}.zip'), 200
+
+@api_bp.route('/inference', methods=['POST'])
+async def inference():
+    image = request.files.get('image')
+    if not image or not image.filename:
+        return jsonify({'error': 'No image provided.'}), 400
+
+    bytes_image = BytesIO()
+    image.save(bytes_image)
+
+    base64_image = base64.b64encode(bytes_image.getvalue()).decode('utf-8')
+    
+    task = inference_image.delay(base64_image)
+    try: result = task.get()
+    except Exception: return jsonify({'error': ERROR_INFERENCE}), 500
+
+    species = Species.query.filter_by(code=result['species_code']).first()
+    if not species: return jsonify({'error': ERROR_SPECIES_NOT_FOUND}), 404
+
+    return jsonify({'species': species.to_json(), 
+                    'bbox': result['bbox'],
+                    'bbox_image': result['bbox_image']}), 200

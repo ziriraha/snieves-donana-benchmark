@@ -41,9 +41,7 @@ Temporary Items
 
 # Large Files
 ## Model weights
-*.pth
-*.pt
-
+weights/
 ## Dataset
 *.csv
 

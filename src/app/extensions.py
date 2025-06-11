@@ -1,7 +1,8 @@
 from celery import Celery, Task
 from flask_sqlalchemy import SQLAlchemy
 from megadetector.detection import run_detector
-from .config import MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, REDIS_APP_URL
+from .config import MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, REDIS_APP_URL, INFERENCE_MODEL_PATH
+from ultralytics import YOLO
 from minio import Minio
 import redis
 
@@ -39,5 +40,5 @@ detection_model = None
 def get_detection_model():
     global detection_model
     if detection_model is None:
-        pass # Load my model here
+        detection_model = YOLO(INFERENCE_MODEL_PATH)
     return detection_model

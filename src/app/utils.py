@@ -1,14 +1,12 @@
 from io import BytesIO
 
-from .extensions import minio_client, get_bbox_model
+from .extensions import minio_client, get_bbox_model, get_detection_model
+from .constants import INFERENCE_CLASSES
 from .config import MINIO_BUCKET
 from datetime import datetime
 from megadetector.visualization import visualization_utils as vis_utils
 import logging
 logger = logging.getLogger(__name__)
-
-class DetectionError(Exception):
-    pass
 
 def verify_date(date_str):
     if date_str:
@@ -37,3 +35,19 @@ def calculate_bbox(bytes_image):
             'width': bbox[2],
             'height': bbox[3]
         }
+
+def get_inference_calculation(bytes_image):
+    model, pcls, pbbox, bbox_image = get_detection_model(), -1, None, BytesIO()
+    with vis_utils.load_image(BytesIO(bytes_image)) as image:
+        for result in model(image):
+            if len(result.boxes) != 0:
+                pcls = int(result.boxes.cls[0].item())
+                pbbox = result.boxes.xywhn[0].tolist()
+                dbbox = result.boxes.xyxy[0].tolist()
+            break
+        if pbbox:
+            logger.info(f'Inference result: class={pcls}, bbox={pbbox}, dbbox={dbbox}')
+            vis_utils.draw_bounding_box_on_image(image, dbbox[1], dbbox[0], dbbox[3], dbbox[2], use_normalized_coordinates=False)
+            image.save(bbox_image, format='JPEG', quality='keep' if image.format == 'JPEG' else 95)
+        else: bbox_image = None
+    return INFERENCE_CLASSES[pcls] if pcls != -1 else 'emp', pbbox, bbox_image.getvalue()

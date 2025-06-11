@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
 
 from .models import Species, Park
+from .constants import INFERENCE_CLASSES
 
 views_bp = Blueprint('views', __name__)
 
@@ -19,7 +20,8 @@ async def dataset():
 
 @views_bp.route('/inference/')
 async def inference():
-    return render_template('inference.html')
+    inference_species = Species.query.filter(Species.code.in_(INFERENCE_CLASSES)).order_by(Species.scientific_name).all()
+    return render_template('inference.html', species_list=[s.to_json() for s in inference_species])
 
 @views_bp.route('/benchmark/')
 async def benchmark():

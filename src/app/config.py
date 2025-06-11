@@ -17,6 +17,8 @@ MAX_CELERY_THREADS = (os.cpu_count() or 4) * 2
 
 API_DATA_DIRECTORY = os.getenv('API_DATA_DIRECTORY', './data/')
 
+INFERENCE_MODEL_PATH = os.getenv('INFERENCE_MODEL_PATH', './inference.pt')
+
 MINIO_URL = os.getenv('MINIO_URL')
 MINIO_BUCKET = os.getenv('MINIO_BUCKET')
 MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY')
