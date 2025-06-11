@@ -61,7 +61,7 @@
             <div class="modal-body">
                 <p id="result-species">Your inference request has been submitted successfully.</p>
                 <p id="result-bbox">No bounding box was found.</p>
-                <img id="result-image" src="" alt="Inference Result" class="img-fluid mt-3">
+                <img id="result-image" src="" alt="Inference Result" class="img-fluid mt-3", style="display: none;">
             </div>
             <div class="modal-footer">
                 <button id="close-button" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -87,6 +87,9 @@
         const resultImage = document.getElementById('result-image');
         const requestButton = document.getElementById('request-button');
 
+        resultImage.style.display = 'none';
+        resultSpecies.textContent = 'Processing your request...';
+        resultBbox.textContent = '';
         requestButton.disabled = true;
 
         fetch(form.action, {
@@ -105,6 +108,7 @@
                     if (response.bbox) {
                         resultBbox.textContent = `Bounding Box is in format xywh: (${response.bbox.x}, ${response.bbox.y}, ${response.bbox.width}, ${response.bbox.height})`;
                         resultImage.src = `data:image/jpg;base64,${response.bbox_image}`;
+                        resultImage.style.display = 'block';
                     } else {
                         resultBbox.textContent = 'No bounding box was found.';
                     }

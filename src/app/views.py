@@ -26,3 +26,7 @@ async def inference():
 @views_bp.route('/benchmark/')
 async def benchmark():
     return render_template('benchmark.html')
+
+@views_bp.route('/api/')
+async def api():
+    return render_template('api.html')

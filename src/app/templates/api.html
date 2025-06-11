@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}API{% endblock %}
+{% block main %}
+<section>
+    <div class="content">
+        <h2>The API</h2>
+        <p>
+            This project provides API endpoints for accessing data related to species, parks, and images. You are also
+            able to create dataset requests and inference using the API.
+        </p>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/datasets/&lt;set_name&gt;</code></span></h3>
+        <p>Retrieves a dataset by name.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>set_name</code> (string): The name of the dataset.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: The dataset is returned as a zip file.</li>
+                <li><code>404 Not Found</code>: The dataset is not found.</li>
+                <li><code>500 Internal Server Error</code>: The dataset is not found but should exist.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+<section>
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/species</code></h3>
+        <p>Retrieves a list of all species.</p>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: A list of species is returned in JSON format.</li>
+                <li><code>404 Not Found</code>: No species are found.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/species/&lt;scode&gt;</code></h3>
+        <p>Retrieves a species by code.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>scode</code> (string): The code of the species.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: The species is returned in JSON format.</li>
+                <li><code>404 Not Found</code>: The species is not found.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/parks</code></h3>
+        <p>Retrieves a list of all parks.</p>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: A list of parks is returned in JSON format.</li>
+                <li><code>404 Not Found</code>: No parks are found.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/parks/&lt;pcode&gt;</code></h3>
+        <p>Retrieves a park by code.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>pcode</code> (string): The code of the park.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: The park is returned in JSON format.</li>
+                <li><code>404 Not Found</code>: The park is not found.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/images</code></h3>
+        <p>Retrieves a list of images based on filters.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>parks</code> (string): A comma-separated list of park codes.</li>
+                <li><code>species</code> (string): A comma-separated list of species codes.</li>
+                <li><code>start_date</code> (string): The start date of the range.</li>
+                <li><code>end_date</code> (string): The end date of the range.</li>
+                <li><code>limit</code> (integer): The maximum number of images to return.</li>
+                <li><code>offset</code> (integer): The offset of the images to return.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: A list of images is returned in JSON format.</li>
+                <li><code>404 Not Found</code>: No images are found.</li>
+                <li><code>400 Bad Request</code>: The date format is invalid.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h3><span class="badge text-bg-primary">POST</span> <code>/api/queries</code></h3>
+        <p>Creates a job to retrieve images based on filters.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>parks</code> (list of strings): A list of park codes.</li>
+                <li><code>species</code> (list of strings): A list of species codes.</li>
+                <li><code>start_date</code> (string): The start date of the range.</li>
+                <li><code>end_date</code> (string): The end date of the range.</li>
+                <li><code>limit</code> (integer): The maximum number of images to return.</li>
+                <li><code>offset</code> (integer): The offset of the images to return.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>202 Accepted</code>: The job is created and the query ID is returned.</li>
+                <li><code>404 Not Found</code>: No images are found.</li>
+                <li><code>400 Bad Request</code>: The date format is invalid.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/queries/&lt;query_id&gt;</code></h3>
+        <p>Retrieves the status of a job.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>query_id</code> (string): The ID of the job.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: The job status is returned in JSON format.</li>
+                <li><code>404 Not Found</code>: The job is not found.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="bg-dark text-light">
+    <div class="content">
+        <h3><span class="badge text-bg-success">GET</span> <code>/api/queries/&lt;query_id&gt;/download</code></h3>
+        <p>Retrieves the result of a job as a zip file and deletes it from the server.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>query_id</code> (string): The ID of the job.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: The job result is returned as a zip file.</li>
+                <li><code>500 Internal Server Error</code>: The job result is not found.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="content">
+        <h3><span class="badge text-bg-primary">POST</span> <code>/api/inference</code></h3>
+        <p>Performs species inference from an uploaded image.</p>
+        <div>
+            <h3>Parameters</h3>
+            <ul>
+                <li><code>image</code> (file): The image file to run inference on.</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Response</h3>
+            <ul>
+                <li><code>200 OK</code>: Returns the predicted species info, bounding box, and cropped image.</li>
+                <li><code>400 Bad Request</code>: No image was provided.</li>
+                <li><code>404 Not Found</code>: Predicted species not found in database.</li>
+                <li><code>500 Internal Server Error</code>: Inference task failed.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}
