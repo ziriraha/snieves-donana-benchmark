@@ -6,7 +6,6 @@ from .config import MINIO_BUCKET
 from datetime import datetime
 from megadetector.visualization import visualization_utils as vis_utils
 import logging
-logger = logging.getLogger(__name__)
 
 def verify_date(date_str):
     if date_str:
@@ -20,7 +19,10 @@ def get_image_from_minio(object_path):
         object_name=object_path)
 
 def download_image_from_minio(object_path, save_path):
-    bytes_image = get_image_from_minio(object_path).data
+    response = get_image_from_minio(object_path)
+    bytes_image = response.data
+    response.close()
+    response.release_conn()
     with vis_utils.load_image(BytesIO(bytes_image)) as image:
         image.save(save_path, format='JPEG', quality='keep' if image.format == 'JPEG' else 95)
     return bytes_image
@@ -46,7 +48,6 @@ def get_inference_calculation(bytes_image):
                 dbbox = result.boxes.xyxy[0].tolist()
             break
         if pbbox:
-            logger.info(f'Inference result: class={pcls}, bbox={pbbox}, dbbox={dbbox}')
             vis_utils.draw_bounding_box_on_image(image, dbbox[1], dbbox[0], dbbox[3], dbbox[2], use_normalized_coordinates=False)
             image.save(bbox_image, format='JPEG', quality='keep' if image.format == 'JPEG' else 95)
         else: bbox_image = None

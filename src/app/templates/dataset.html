@@ -183,6 +183,11 @@
         const requestButton = document.getElementById('request-button');
 
         requestButton.disabled = true;
+        downloadButton.style.display = 'none';
+        closeButton.style.display = 'none';
+        progressStatus.textContent = 'Processing your request...';
+        progressBar.style.width = '100%';
+        progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
 
         fetch(form.action, {
             method: form.method,
